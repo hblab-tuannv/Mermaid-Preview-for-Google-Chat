@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "current_phase": "deployment",
+  "current_phase": "operations",
   "mode": "small",
   "engine": "inline",
   "gates": {
@@ -27,11 +27,12 @@
       "ts": "2026-06-11T13:49:41Z"
     },
     "deployment": {
-      "status": "pending",
-      "rollback_tested": false
+      "status": "pass",
+      "rollback_tested": false,
+      "ts": "2026-06-11T13:58:44Z"
     },
     "operations": {
-      "status": "blocked"
+      "status": "pending"
     }
   },
   "stories": {
@@ -65,5 +66,5 @@
     "test_command": "npx vitest run --coverage",
     "coverage_threshold": 80
   },
-  "updated": "2026-06-11T13:49:41Z"
+  "updated": "2026-06-11T13:58:44Z"
 }

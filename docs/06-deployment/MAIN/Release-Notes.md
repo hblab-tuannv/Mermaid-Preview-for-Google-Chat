@@ -30,3 +30,9 @@ epic: MAIN
 ## Upgrade Notes
 
 Đây là phiên bản phát hành đầu tiên (v1.0.0). Không có phiên bản cũ cần nâng cấp. Cài đặt theo hướng dẫn trong Runbook (load unpacked từ `dist/`).
+
+## Go/No-Go Decision
+
+- **Quyết định:** **GO** — phê duyệt bởi human (product owner) ngày `2026-06-11`.
+- **Cơ sở:** Test tự động xanh 50/50, coverage 100% stmt/func/line (97.87% branches), 0 defect critical/major; code review Approve cho cả 4 story.
+- **⚠️ Waiver (rủi ro đã chấp nhận):** Human chọn Go **bỏ qua** manual smoke test (Runbook §3.2) và rollback test (Runbook §7.2). Do đó `rollback_tested` được giữ ở **`false`** — rollback **chưa** được kiểm chứng thực tế. Trước/ngay khi phân phối production, nên thực hiện §3.2 + §7.2 và cập nhật cờ này. Đây là quyết định có chủ ý, không phải thiếu sót quy trình.
