@@ -50,6 +50,46 @@ export interface MermaidBlock {
   source: string;
 }
 
+/** The ```mermaid fence language tag Google Chat keeps as the first text line. */
+const LANGUAGE_TAG = 'mermaid';
+
+/**
+ * Extract a code block's source text, converting `<br>` to `\n`. Google Chat
+ * renders code-block line breaks as `<br>` elements (not `"\n"` text), so plain
+ * `textContent` would collapse a multi-line diagram onto one line.
+ */
+export function extractSource(el: HTMLElement): string {
+  let out = '';
+  const walk = (node: Node): void => {
+    node.childNodes.forEach((child) => {
+      if (child.nodeType === 3 /* TEXT_NODE */) {
+        out += child.textContent ?? '';
+      } else if (child.nodeName === 'BR') {
+        out += '\n';
+      } else {
+        walk(child);
+      }
+    });
+  };
+  walk(el);
+  return out;
+}
+
+/**
+ * Strip a leading ` ```mermaid ` language-tag line. Chat keeps that tag as the
+ * first text line of the sent code block (e.g. `"mermaid\ngraph TD..."`), which
+ * is not a diagram keyword. Only an exact `mermaid` first line is removed, so
+ * real keywords like `mindmap` are never touched.
+ */
+export function stripLanguageTag(source: string): string {
+  const nl = source.indexOf('\n');
+  const firstLine = (nl === -1 ? source : source.slice(0, nl)).trim();
+  if (firstLine.toLowerCase() === LANGUAGE_TAG) {
+    return nl === -1 ? '' : source.slice(nl + 1);
+  }
+  return source;
+}
+
 /**
  * True when `text` looks like a Mermaid diagram: its first non-empty token
  * (case-insensitive) is a known diagram keyword. Empty/whitespace → false.
@@ -85,7 +125,7 @@ export function detectMermaidBlocks(root: ParentNode): MermaidBlock[] {
     if (element.hasAttribute(DETECTED_ATTR)) {
       continue;
     }
-    const source = element.textContent ?? '';
+    const source = stripLanguageTag(extractSource(element));
     if (!isMermaid(source)) {
       continue;
     }
