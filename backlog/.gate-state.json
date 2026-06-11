@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "current_phase": "design",
+  "current_phase": "development",
   "mode": "small",
   "engine": "inline",
   "gates": {
@@ -13,10 +13,11 @@
       "ts": "2026-06-11T10:58:36Z"
     },
     "design": {
-      "status": "pending"
+      "status": "pass",
+      "ts": "2026-06-11T11:04:44Z"
     },
     "development": {
-      "status": "blocked",
+      "status": "pending",
       "tests_green": false,
       "review_approved": false
     },
@@ -31,7 +32,12 @@
       "status": "blocked"
     }
   },
-  "stories": {},
+  "stories": {
+    "MAIN-US-001": {
+      "tests_green": true,
+      "ts": "2026-06-11T11:11:02Z"
+    }
+  },
   "epics": {},
   "open_defects": {
     "critical": 0,
@@ -41,5 +47,5 @@
     "test_command": "npx vitest run --coverage",
     "coverage_threshold": 80
   },
-  "updated": "2026-06-11T10:58:36Z"
+  "updated": "2026-06-11T11:11:02Z"
 }
