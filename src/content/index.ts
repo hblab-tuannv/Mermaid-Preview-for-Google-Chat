@@ -43,6 +43,9 @@ export function initContentScript(
   if (!doc) {
     return () => {};
   }
+  // Re-render on any subtree addition. The scan mutates the DOM it observes, so
+  // each batch self-triggers one extra (empty) scan — bounded and self-
+  // terminating because detect/render markers make repeat scans no-ops.
   return observeChildList(
     doc.body,
     () => void previewMermaidIn(doc.body, { renderer: opts.renderer }),
