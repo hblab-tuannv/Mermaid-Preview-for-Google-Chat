@@ -34,7 +34,7 @@ export function attachToggle(
     source.hidden = showPreview;
     button.setAttribute('data-state', state);
     // Label names the action the click will perform next.
-    button.textContent = showPreview ? 'Xem mã' : 'Xem sơ đồ';
+    button.textContent = showPreview ? 'View source' : 'View diagram';
   };
 
   apply('preview');
