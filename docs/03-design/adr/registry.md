@@ -4,4 +4,4 @@
 
 | ADR ID | Title | Story | Status | Body |
 |---|---|---|---|---|
-| ADR-MAIN-001-mv3-vite-toolchain | Build toolchain và kiến trúc Manifest V3 cho extension | MAIN-US-001 | Proposed | [design.md](../../features/MAIN/US-001/design.md) |
+| ADR-MAIN-001-mv3-vite-toolchain | Build toolchain và kiến trúc Manifest V3 cho extension | MAIN-US-001 | Accepted | [design.md](../../features/MAIN/US-001/design.md) |
