@@ -8,6 +8,7 @@ import {
   resetPreviews,
 } from './render';
 import { TOGGLE_ATTR } from './toggle';
+import { ZOOM_ATTR, closeActiveOverlay } from './zoom';
 
 vi.mock('mermaid', () => ({
   default: {
@@ -158,6 +159,33 @@ describe('renderMermaidBlock', () => {
     expect(b.element.hidden).toBe(false);
   });
 
+  // US-006 AC-1: zoom button wired on success path only.
+  it('attaches a zoom button on success path (US-006 AC-1)', async () => {
+    const b = block('graph TD\nA-->B');
+    await renderMermaidBlock(b, { renderer: okRenderer(), doc: document });
+    const zoomBtn = document.querySelector(`[${ZOOM_ATTR}]`);
+    expect(zoomBtn).not.toBeNull();
+  });
+
+  it('attaches no zoom button on the error fallback (US-006 AC-1)', async () => {
+    const b = block('graph TD\nA--');
+    const failing: MermaidRenderer = {
+      render: vi.fn().mockRejectedValue(new Error('Parse error')),
+    };
+    await renderMermaidBlock(b, { renderer: failing });
+    expect(document.querySelector(`[${ZOOM_ATTR}]`)).toBeNull();
+  });
+
+  // US-006 AC-2: idempotency via HANDLED_ATTR gate — second call is 'skipped',
+  // so only one zoom button should exist.
+  it('creates exactly one zoom button even after a redundant scan (US-006 AC-2)', async () => {
+    const b = block('graph TD\nA-->B');
+    const renderer = okRenderer();
+    await renderMermaidBlock(b, { renderer, doc: document });
+    await renderMermaidBlock(b, { renderer, doc: document }); // skipped
+    expect(document.querySelectorAll(`[${ZOOM_ATTR}]`)).toHaveLength(1);
+  });
+
   // US-005: theme passed to the renderer.
   it('passes the detected theme to the renderer (US-005 AC-1)', async () => {
     const surface = document.createElement('div');
@@ -207,6 +235,8 @@ describe('resetPreviews', () => {
 
     expect(document.querySelector('[data-mermaid-preview="rendered"]')).toBeNull();
     expect(document.querySelector(`[${TOGGLE_ATTR}]`)).toBeNull();
+    // US-006 AC-6: zoom button also removed.
+    expect(document.querySelector(`[${ZOOM_ATTR}]`)).toBeNull();
     expect(b.element.hidden).toBe(false);
     expect(b.element.hasAttribute('data-mermaid-rendered')).toBe(false);
     expect(b.element.hasAttribute('data-mermaid-preview')).toBe(false);
@@ -229,5 +259,26 @@ describe('resetPreviews', () => {
     resetPreviews(document);
     expect(document.querySelector('[data-mermaid-preview="error"]')).toBeNull();
     expect(b.element.hasAttribute('data-mermaid-rendered')).toBe(false);
+  });
+
+  // US-006 AC-6: overlay closed safely when reset fires while overlay is open.
+  it('closes an open zoom overlay when resetPreviews runs (US-006 AC-6)', async () => {
+    const b = block('graph TD\nA-->B');
+    await renderMermaidBlock(b, { renderer: okRenderer(), doc: document });
+    // Open the zoom overlay.
+    const zoomBtn = document.querySelector(`[${ZOOM_ATTR}]`) as HTMLButtonElement;
+    expect(zoomBtn).not.toBeNull();
+    zoomBtn.click();
+    expect(document.querySelector('[data-mermaid-zoom-overlay]')).not.toBeNull();
+    // Reset should close the overlay without throwing.
+    expect(() => resetPreviews(document)).not.toThrow();
+    expect(document.querySelector('[data-mermaid-zoom-overlay]')).toBeNull();
+  });
+
+  it('does not throw when resetPreviews runs with no open overlay (US-006 AC-6 no-op path)', async () => {
+    closeActiveOverlay(); // ensure nothing is open
+    const b = block('graph TD\nA-->B');
+    await renderMermaidBlock(b, { renderer: okRenderer(), doc: document });
+    expect(() => resetPreviews(document)).not.toThrow();
   });
 });

@@ -7,6 +7,7 @@
 
 import { type MermaidTheme, detectTheme } from './theme';
 import { TOGGLE_ATTR, attachToggle } from './toggle';
+import { ZOOM_ATTR, attachZoom, closeActiveOverlay } from './zoom';
 
 const RENDERED_ATTR = 'data-mermaid-preview';
 /** Marks a source element whose render has already been attempted. */
@@ -114,6 +115,10 @@ export async function renderMermaidBlock(
     // Add the preview/source toggle here, on the idempotent success path, so it
     // is created exactly once per block (ADR-MAIN-004). Default hides the source.
     attachToggle(element, container, doc);
+    // Add the zoom button immediately after the toggle call, on the same
+    // idempotent success path, so it is created exactly once per block
+    // (ADR-MAIN-007). Error path intentionally does NOT call attachZoom.
+    attachZoom(container, doc);
     return 'rendered';
   } catch {
     // Fallback: leave the original code block visible, add a light error marker.
@@ -127,18 +132,31 @@ export async function renderMermaidBlock(
 
 /**
  * Undo every rendered/errored preview under `root`: remove the preview (or
- * error) container and its toggle, clear the detect/render markers, and unhide
- * the source. A subsequent {@link renderMermaidBlock} pass then re-renders from
- * scratch — used to re-theme all diagrams when Chat's theme flips (ADR-MAIN-006).
+ * error) container and ALL following control siblings (toggle + zoom), close any
+ * open zoom overlay, clear the detect/render markers, and unhide the source. A
+ * subsequent {@link renderMermaidBlock} pass then re-renders from scratch — used
+ * to re-theme all diagrams when Chat's theme flips (ADR-MAIN-006, ADR-MAIN-007).
  */
 export function resetPreviews(root: ParentNode): void {
+  // Close any open zoom overlay before tearing down the DOM — safe because
+  // closeActiveOverlay() is no-op when nothing is open (AC-6, ADR-MAIN-007).
+  closeActiveOverlay();
+
   root.querySelectorAll<HTMLElement>(`[${HANDLED_ATTR}]`).forEach((source) => {
     const sibling = source.nextElementSibling;
     const marker = sibling?.getAttribute(RENDERED_ATTR);
     if (marker === 'rendered' || marker === 'error') {
-      const toggle = sibling!.nextElementSibling;
-      if (toggle?.hasAttribute(TOGGLE_ATTR)) {
-        toggle.remove();
+      // Walk and remove ALL following control siblings (zoom + toggle, in any
+      // order) identified by their marker attributes. Capture nextElementSibling
+      // BEFORE removing to avoid losing the reference (ADR-MAIN-007).
+      let control = sibling!.nextElementSibling;
+      while (
+        control !== null &&
+        (control.hasAttribute(TOGGLE_ATTR) || control.hasAttribute(ZOOM_ATTR))
+      ) {
+        const next = control.nextElementSibling;
+        control.remove();
+        control = next;
       }
       sibling!.remove();
     }
