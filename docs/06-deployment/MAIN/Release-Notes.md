@@ -1,17 +1,21 @@
 ---
-version: "1.0.0"
-date: "2026-06-11T13:49:41Z"
+version: "1.1.0"
+date: "2026-06-11T15:25:45Z"
 author: release-manager
 status: Draft
 release_id: REL-MAIN-2026-06-11
 epic: MAIN
 ---
 
-# Release Notes — Mermaid Preview for Google Chat v1.0.0
+# Release Notes — Mermaid Preview for Google Chat v1.1.0
 
-**Ngày phát hành:** `2026-06-11T13:49:41Z`
+**Ngày phát hành:** `2026-06-11T15:25:45Z`
+
+> v1.0.0 không khả dụng khi nạp thực tế (xem INC-01/INC-02); v1.1.0 là bản hoạt động đầu tiên đã xác nhận trên chat.google.com, kèm tính năng auto theme.
 
 ## Added
+
+- **Tự động theme sáng/tối theo giao diện Google Chat** — Sơ đồ render theo theme `dark`/`default` khớp độ sáng nền thật của Chat (không bám class), và tự render lại toàn bộ khi đổi theme giữa phiên. US: `MAIN-US-005` / PR: `PR-MAIN-US-005` / ADR: `ADR-MAIN-006`
 
 - **Scaffold MV3 extension + inject content-script vào Google Chat** — Dựng project Chrome Extension Manifest V3 (TypeScript + Vite), build ra `dist/`, load unpacked, inject content-script chạy trên `https://chat.google.com/*`. US: `MAIN-US-001` / PR: `PR-MAIN-US-001`
 
@@ -20,6 +24,11 @@ epic: MAIN
 - **Render mã Mermaid thành SVG inline với fallback an toàn** — Dùng thư viện Mermaid (`securityLevel: 'strict'`) render source đã phát hiện thành SVG chèn inline cạnh code block. Khi parse lỗi, fallback hiển thị mã gốc, không làm vỡ giao diện chat. US: `MAIN-US-003` / PR: `PR-MAIN-US-003`
 
 - **Toggle preview/source + xử lý tin nhắn tải động** — Thêm control toggle để chuyển giữa sơ đồ SVG đã render và mã Mermaid gốc (không render lại), gắn MutationObserver để tự render các block Mermaid trong tin nhắn tải động trong phiên chat. Idempotent, không vỡ giao diện, observer tháo gỡ được. US: `MAIN-US-004` / PR: `PR-MAIN-US-004`
+
+## Fixed
+
+- **Chrome không nạp được `content.js` ("isn't UTF-8 encoded")** — bundle chứa ký tự non-character U+FFFF; build giờ ép output ASCII-only. INC-MAIN-2026-06-11-01 / ADR-MAIN-005.
+- **Sơ đồ render trong khung soạn + message gửi không preview** — bỏ qua vùng `contenteditable`; trích source message gửi đúng (`<br>`→newline, bỏ nhãn ```mermaid). INC-MAIN-2026-06-11-02 / revise ADR-MAIN-002.
 
 ## Known Issues
 

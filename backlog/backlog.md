@@ -8,4 +8,4 @@
 | 2 | MAIN-US-002 | Phát hiện code block Mermaid trong tin nhắn | Done | US-001 |
 | 3 | MAIN-US-003 | Render Mermaid thành SVG inline + fallback an toàn | Done | US-002 |
 | 4 | MAIN-US-004 | Toggle preview/source + xử lý tin nhắn tải động | Done | US-003 |
-| 5 | MAIN-US-005 | Tự động theme sáng/tối theo giao diện Google Chat | Ready | US-004 |
+| 5 | MAIN-US-005 | Tự động theme sáng/tối theo giao diện Google Chat | Done | US-004 |
