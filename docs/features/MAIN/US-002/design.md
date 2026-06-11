@@ -19,7 +19,7 @@ US-002 phải trả lời hai câu hỏi tách biệt: (a) *element nào* trong 
 ## Decision
 We will tách "tìm element" khỏi "nhận diện nội dung", và nhận diện bằng **heuristic so khớp từ khoá đầu khối**:
 
-1. **Tìm element** qua một hàm `findCodeBlocks(root: ParentNode): HTMLElement[]` cô lập selector (mặc định `pre code, pre`) — đây là điểm-vỡ-duy-nhất, dễ chỉnh khi Google đổi DOM, và được test bằng DOM jsdom.
+1. **Tìm element** qua một hàm `findCodeBlocks(root: ParentNode): HTMLElement[]` cô lập selector (mặc định `pre` — `textContent` của `pre` đã bao gồm `code` con nên mỗi block chỉ đếm một lần) — đây là điểm-vỡ-duy-nhất, dễ chỉnh khi Google đổi DOM, và được test bằng DOM jsdom.
 2. **Nhận diện nội dung** qua `isMermaid(text): boolean`: `text.trim()`, lấy token đầu của dòng đầu, so khớp **không phân biệt hoa thường** với một tập hằng `MERMAID_KEYWORDS` (`graph`, `flowchart`, `sequenceDiagram`, `classDiagram`, `stateDiagram`/`stateDiagram-v2`, `erDiagram`, `gantt`, `pie`, `journey`, `gitGraph`, `mindmap`, `timeline`, `quadrantChart`, …). Rỗng/whitespace → false (AC-4).
 3. **Trích source** bằng `textContent` (lấy text thuần, không kèm thẻ HTML) — AC-1/AC-5 giữ nguyên nội dung gốc, chỉ trim khi *so khớp* chứ không trim source trả về.
 4. **Idempotency** bằng cách đánh dấu element đã xử lý với thuộc tính `data-mermaid-preview="detected"`; `detectMermaidBlocks(root)` bỏ qua element đã có dấu (AC-6).

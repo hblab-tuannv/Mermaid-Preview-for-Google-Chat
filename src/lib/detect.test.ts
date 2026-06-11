@@ -98,6 +98,18 @@ describe('detectMermaidBlocks', () => {
     expect(found[0].source).toBe(raw);
   });
 
+  it('extracts plain source even when tokens are wrapped in highlight markup (AC-1)', () => {
+    // Google Chat wraps code tokens in syntax-highlight <span>s; textContent must strip them.
+    const pre = document.createElement('pre');
+    const code = document.createElement('code');
+    code.innerHTML = '<span class="hl">graph</span> TD\nA--&gt;B';
+    pre.appendChild(code);
+    const root = mount(pre);
+    const found = detectMermaidBlocks(root);
+    expect(found).toHaveLength(1);
+    expect(found[0].source).toBe('graph TD\nA-->B');
+  });
+
   it('is idempotent — an already-detected block is not returned again (AC-6)', () => {
     const root = mount(codeBlock('graph TD\nA-->B'));
     expect(detectMermaidBlocks(root)).toHaveLength(1);
