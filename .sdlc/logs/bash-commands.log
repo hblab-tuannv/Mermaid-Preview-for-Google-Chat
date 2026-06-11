@@ -1,0 +1,4 @@
+2026-06-11T10:14:02Z	7405026a-99e4-47f0-888c-e525b745c71e	bash "/Users/tuannv/Desktop/SDLC/scripts/gate-check.sh" config --mode small 2>&1; echo "=== exit:$? ==="; echo "=== templates ==="; ls /Users/tuannv/Desktop/SDLC/templates/04-development/ /Users/tuannv/Desktop/SDLC/templates/checklists/ 2>&1
+2026-06-11T10:14:22Z	7405026a-99e4-47f0-888c-e525b745c71e	mkdir -p docs/04-development docs/checklists && echo "dirs created"
+2026-06-11T10:15:19Z	7405026a-99e4-47f0-888c-e525b745c71e	bash "/Users/tuannv/Desktop/SDLC/scripts/gate-check.sh" config \ --test-command "npx vitest run --coverage" \ --coverage-threshold 80 2>&1; echo "=== exit:$? ==="; echo "=== final state ==="; cat backlog/.gate-state.json
+2026-06-11T10:15:23Z	7405026a-99e4-47f0-888c-e525b745c71e	find docs backlog -type f | sort

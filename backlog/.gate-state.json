@@ -1,0 +1,43 @@
+{
+  "schema_version": 2,
+  "current_phase": "planning",
+  "mode": "small",
+  "engine": "inline",
+  "gates": {
+    "planning": {
+      "status": "pending"
+    },
+    "requirements": {
+      "status": "blocked"
+    },
+    "design": {
+      "status": "blocked"
+    },
+    "development": {
+      "status": "blocked",
+      "tests_green": false,
+      "review_approved": false
+    },
+    "testing": {
+      "status": "blocked"
+    },
+    "deployment": {
+      "status": "blocked",
+      "rollback_tested": false
+    },
+    "operations": {
+      "status": "blocked"
+    }
+  },
+  "stories": {},
+  "epics": {},
+  "open_defects": {
+    "critical": 0,
+    "major": 0
+  },
+  "config": {
+    "test_command": "npx vitest run --coverage",
+    "coverage_threshold": 80
+  },
+  "updated": "2026-06-11T10:15:19Z"
+}
