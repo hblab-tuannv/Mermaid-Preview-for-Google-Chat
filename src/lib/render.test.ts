@@ -1,7 +1,12 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import mermaid from 'mermaid';
-import { MERMAID_INIT_CONFIG, type MermaidRenderer, renderMermaidBlock } from './render';
+import {
+  MERMAID_INIT_CONFIG,
+  type MermaidRenderer,
+  renderMermaidBlock,
+  resetPreviews,
+} from './render';
 import { TOGGLE_ATTR } from './toggle';
 
 vi.mock('mermaid', () => ({
@@ -68,8 +73,10 @@ describe('renderMermaidBlock', () => {
   it('uses the default mermaid-backed renderer when none is injected (AC-3)', async () => {
     const b1 = block('graph TD\nA-->B');
     expect(await renderMermaidBlock(b1)).toBe('rendered');
-    expect(mermaid.initialize).toHaveBeenCalledWith(MERMAID_INIT_CONFIG);
-    // Second default render reuses the cached, already-initialized renderer.
+    // Theme is set via host config, not a directive (ADR-MAIN-006); no opaque
+    // background in jsdom → 'default'.
+    expect(mermaid.initialize).toHaveBeenCalledWith({ ...MERMAID_INIT_CONFIG, theme: 'default' });
+    // Second default render at the same theme reuses the cached initialization.
     const b2 = block('pie title Pets');
     expect(await renderMermaidBlock(b2)).toBe('rendered');
     expect(mermaid.initialize).toHaveBeenCalledTimes(1);
@@ -149,5 +156,78 @@ describe('renderMermaidBlock', () => {
     await renderMermaidBlock(b, { renderer: failing });
     expect(document.querySelector(`[${TOGGLE_ATTR}]`)).toBeNull();
     expect(b.element.hidden).toBe(false);
+  });
+
+  // US-005: theme passed to the renderer.
+  it('passes the detected theme to the renderer (US-005 AC-1)', async () => {
+    const surface = document.createElement('div');
+    surface.style.backgroundColor = 'rgb(18, 18, 18)'; // dark
+    document.body.appendChild(surface);
+    const pre = document.createElement('pre');
+    pre.textContent = 'graph TD\nA-->B';
+    surface.appendChild(pre);
+
+    const seen: (string | undefined)[] = [];
+    const renderer: MermaidRenderer = {
+      async render(id, _source, theme) {
+        seen.push(theme);
+        return { svg: `<svg id="${id}"></svg>` };
+      },
+    };
+    await renderMermaidBlock(
+      { element: pre, source: 'graph TD\nA-->B' },
+      { renderer, doc: document },
+    );
+    expect(seen).toEqual(['dark']);
+  });
+
+  it('honours an explicit opts.theme override (US-005 AC-1)', async () => {
+    const b = block('graph TD\nA-->B');
+    const seen: (string | undefined)[] = [];
+    const renderer: MermaidRenderer = {
+      async render(id, _source, theme) {
+        seen.push(theme);
+        return { svg: `<svg id="${id}"></svg>` };
+      },
+    };
+    await renderMermaidBlock(b, { renderer, theme: 'dark' });
+    expect(seen).toEqual(['dark']);
+  });
+});
+
+describe('resetPreviews', () => {
+  it('removes the preview container + toggle, clears markers, unhides source (US-005 AC-5)', async () => {
+    const b = block('graph TD\nA-->B');
+    await renderMermaidBlock(b, { renderer: okRenderer(), doc: document });
+    expect(b.element.hidden).toBe(true);
+    expect(document.querySelector('[data-mermaid-preview="rendered"]')).not.toBeNull();
+    expect(document.querySelector(`[${TOGGLE_ATTR}]`)).not.toBeNull();
+
+    resetPreviews(document);
+
+    expect(document.querySelector('[data-mermaid-preview="rendered"]')).toBeNull();
+    expect(document.querySelector(`[${TOGGLE_ATTR}]`)).toBeNull();
+    expect(b.element.hidden).toBe(false);
+    expect(b.element.hasAttribute('data-mermaid-rendered')).toBe(false);
+    expect(b.element.hasAttribute('data-mermaid-preview')).toBe(false);
+  });
+
+  it('lets a reset block render again (re-theme path, US-005 AC-4)', async () => {
+    const b = block('graph TD\nA-->B');
+    await renderMermaidBlock(b, { renderer: okRenderer(), doc: document });
+    resetPreviews(document);
+    // Second render after reset succeeds (not 'skipped').
+    expect(await renderMermaidBlock(b, { renderer: okRenderer(), doc: document })).toBe('rendered');
+    expect(document.querySelectorAll('[data-mermaid-preview="rendered"]')).toHaveLength(1);
+  });
+
+  it('cleans up an errored block too (US-005 AC-5)', async () => {
+    const b = block('graph TD\nA--');
+    const failing: MermaidRenderer = { render: vi.fn().mockRejectedValue(new Error('boom')) };
+    await renderMermaidBlock(b, { renderer: failing, doc: document });
+    expect(document.querySelector('[data-mermaid-preview="error"]')).not.toBeNull();
+    resetPreviews(document);
+    expect(document.querySelector('[data-mermaid-preview="error"]')).toBeNull();
+    expect(b.element.hasAttribute('data-mermaid-rendered')).toBe(false);
   });
 });

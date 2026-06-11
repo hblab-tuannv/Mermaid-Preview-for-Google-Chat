@@ -1,7 +1,8 @@
 import { detectMermaidBlocks } from '../lib/detect';
 import { Logger, createLogger } from '../lib/logger';
 import { type ObserveOptions, observeChildList } from '../lib/observe';
-import { MermaidRenderer, renderMermaidBlock } from '../lib/render';
+import { MermaidRenderer, renderMermaidBlock, resetPreviews } from '../lib/render';
+import { type ThemeObserveOptions, observeThemeChange } from '../lib/theme';
 
 /** Message passed to the logger; the logger adds the [mermaid-preview] prefix. */
 export const CONTENT_LOADED_MESSAGE = 'content script loaded';
@@ -35,7 +36,11 @@ export async function previewMermaidIn(
  */
 export function initContentScript(
   logger: Logger = createLogger(),
-  opts: { renderer?: MermaidRenderer; observe?: ObserveOptions } = {},
+  opts: {
+    renderer?: MermaidRenderer;
+    observe?: ObserveOptions;
+    themeObserve?: ThemeObserveOptions;
+  } = {},
 ): () => void {
   logger.info(CONTENT_LOADED_MESSAGE);
   const doc = (globalThis as { document?: Document }).document;
@@ -46,11 +51,25 @@ export function initContentScript(
   // Re-render on any subtree addition. The scan mutates the DOM it observes, so
   // each batch self-triggers one extra (empty) scan — bounded and self-
   // terminating because detect/render markers make repeat scans no-ops.
-  return observeChildList(
+  const stopChildList = observeChildList(
     doc.body,
     () => void previewMermaidIn(doc.body, { renderer: opts.renderer }),
     opts.observe,
   );
+  // Re-theme all diagrams when Chat flips light/dark: reset the previews and let
+  // the pipeline re-render them at the new theme (ADR-MAIN-006).
+  const stopTheme = observeThemeChange(
+    doc,
+    () => {
+      resetPreviews(doc.body);
+      void previewMermaidIn(doc.body, { renderer: opts.renderer });
+    },
+    opts.themeObserve,
+  );
+  return () => {
+    stopChildList();
+    stopTheme();
+  };
 }
 
 initContentScript();

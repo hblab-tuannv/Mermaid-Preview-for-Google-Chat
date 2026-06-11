@@ -157,3 +157,44 @@ describe('initContentScript observer wiring (US-004)', () => {
     }
   });
 });
+
+describe('initContentScript theme re-render wiring (US-005)', () => {
+  const Ctor = FakeObserver as unknown as typeof MutationObserver;
+
+  it('re-renders all diagrams at the new theme when Chat flips light→dark (AC-4)', async () => {
+    document.body.replaceChildren();
+    document.body.style.backgroundColor = 'rgb(255, 255, 255)'; // start light
+
+    const themes: (string | undefined)[] = [];
+    const renderer = {
+      async render(id: string, _source: string, theme?: string) {
+        themes.push(theme);
+        return { svg: `<svg id="${id}"></svg>` };
+      },
+    };
+    const themeTasks: (() => void)[] = [];
+    initContentScript(
+      { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+      {
+        renderer,
+        // childList observer left real (harmless); drive only the theme observer.
+        themeObserve: { ObserverCtor: Ctor, schedule: (fn) => themeTasks.push(fn) },
+      },
+    );
+
+    mountCode('graph TD\nA-->B');
+    await previewMermaidIn(document.body, { renderer });
+    expect(themes).toEqual(['default']); // rendered light
+    expect(document.querySelectorAll('[data-mermaid-preview="rendered"]')).toHaveLength(1);
+
+    // Chat flips to dark; the theme observer fires.
+    document.body.style.backgroundColor = 'rgb(16, 16, 16)';
+    FakeObserver.last!.emit([{}]);
+    themeTasks.splice(0).forEach((t) => t());
+    await flush();
+
+    // The diagram was reset and re-rendered at the dark theme — still exactly one.
+    expect(themes).toEqual(['default', 'dark']);
+    expect(document.querySelectorAll('[data-mermaid-preview="rendered"]')).toHaveLength(1);
+  });
+});

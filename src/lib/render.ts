@@ -5,7 +5,8 @@
  * the insertion/fallback/idempotency logic is unit-testable without it.
  */
 
-import { attachToggle } from './toggle';
+import { type MermaidTheme, detectTheme } from './theme';
+import { TOGGLE_ATTR, attachToggle } from './toggle';
 
 const RENDERED_ATTR = 'data-mermaid-preview';
 /** Marks a source element whose render has already been attempted. */
@@ -19,7 +20,7 @@ export const MERMAID_INIT_CONFIG = {
 
 /** Abstraction over `mermaid.render`, injectable so tests can mock it. */
 export interface MermaidRenderer {
-  render(id: string, source: string): Promise<{ svg: string }>;
+  render(id: string, source: string, theme?: MermaidTheme): Promise<{ svg: string }>;
 }
 
 export type RenderOutcome = 'rendered' | 'error' | 'skipped';
@@ -28,6 +29,8 @@ export interface RenderOptions {
   renderer?: MermaidRenderer;
   /** Document used to create nodes; defaults to the block's owner document. */
   doc?: Document;
+  /** Force a theme; defaults to one detected from the block's background (ADR-MAIN-006). */
+  theme?: MermaidTheme;
 }
 
 let idCounter = 0;
@@ -50,13 +53,17 @@ function defaultRenderer(): MermaidRenderer {
   if (cachedDefault) {
     return cachedDefault;
   }
-  let initialized = false;
+  // Re-initialize only when the theme changes (ADR-MAIN-006). Mermaid bakes the
+  // theme into the SVG, so theme is a host-config option (`initialize`), never a
+  // `%%{init}%%` directive — directives are constrained under securityLevel
+  // 'strict', host config is not.
+  let initializedTheme: string | undefined;
   cachedDefault = {
-    async render(id, source) {
+    async render(id, source, theme = 'default') {
       const { default: mermaid } = await import('mermaid');
-      if (!initialized) {
-        mermaid.initialize(MERMAID_INIT_CONFIG);
-        initialized = true;
+      if (initializedTheme !== theme) {
+        mermaid.initialize({ ...MERMAID_INIT_CONFIG, theme });
+        initializedTheme = theme;
       }
       return mermaid.render(id, source);
     },
@@ -91,10 +98,11 @@ export async function renderMermaidBlock(
 
   const doc = opts.doc ?? element.ownerDocument;
   const renderer = opts.renderer ?? defaultRenderer();
+  const theme = opts.theme ?? detectTheme(element);
   const id = nextDiagramId();
 
   try {
-    const { svg } = await renderer.render(id, source);
+    const { svg } = await renderer.render(id, source, theme);
     const node = parseSvg(svg, doc);
     if (!node) {
       throw new Error('Mermaid produced no SVG root');
@@ -115,4 +123,27 @@ export async function renderMermaidBlock(
     element.after(marker);
     return 'error';
   }
+}
+
+/**
+ * Undo every rendered/errored preview under `root`: remove the preview (or
+ * error) container and its toggle, clear the detect/render markers, and unhide
+ * the source. A subsequent {@link renderMermaidBlock} pass then re-renders from
+ * scratch — used to re-theme all diagrams when Chat's theme flips (ADR-MAIN-006).
+ */
+export function resetPreviews(root: ParentNode): void {
+  root.querySelectorAll<HTMLElement>(`[${HANDLED_ATTR}]`).forEach((source) => {
+    const sibling = source.nextElementSibling;
+    const marker = sibling?.getAttribute(RENDERED_ATTR);
+    if (marker === 'rendered' || marker === 'error') {
+      const toggle = sibling!.nextElementSibling;
+      if (toggle?.hasAttribute(TOGGLE_ATTR)) {
+        toggle.remove();
+      }
+      sibling!.remove();
+    }
+    source.hidden = false;
+    source.removeAttribute(HANDLED_ATTR);
+    source.removeAttribute(RENDERED_ATTR); // the "detected" marker on the source
+  });
 }
