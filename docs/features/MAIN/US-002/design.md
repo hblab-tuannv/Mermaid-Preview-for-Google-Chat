@@ -1,5 +1,5 @@
 ---
-status: "Proposed"
+status: "Accepted"
 date: "2026-06-11T12:07:52Z"
 deciders: "architect"
 ---
