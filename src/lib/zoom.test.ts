@@ -170,6 +170,28 @@ describe('overlay controls — rendering robustness (smoke-fix)', () => {
     const close = overlay.querySelector('[data-zoom-close]') as HTMLElement;
     expect(close.textContent).toBe('×');
   });
+
+  it('overlay backdrop is blurred so the page/diagram behind stands down', () => {
+    const { preview } = setup();
+    const btn = attachZoom(preview, document);
+    btn.click();
+    const overlay = getOverlay()!;
+    expect(overlay.getAttribute('style')).toMatch(/blur\(/);
+  });
+
+  it('control bar is anchored to the bottom and horizontally centered', () => {
+    const { preview } = setup();
+    const btn = attachZoom(preview, document);
+    btn.click();
+    const overlay = getOverlay()!;
+    // The control bar is the parent of the zoom-in/out/close buttons.
+    const controls = overlay.querySelector('[data-zoom-in]')!.parentElement as HTMLElement;
+    expect(controls.style.bottom).not.toBe('');
+    expect(controls.style.top).toBe('');
+    // Centered via left:50% + translateX(-50%).
+    expect(controls.style.left).toBe('50%');
+    expect(controls.style.transform).toMatch(/translateX\(-50%\)/);
+  });
 });
 
 describe('attachZoom — spacing (smoke-fix)', () => {

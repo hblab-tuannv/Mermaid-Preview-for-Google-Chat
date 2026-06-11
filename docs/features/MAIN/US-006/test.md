@@ -1,9 +1,9 @@
 ---
 us: "MAIN-US-006"
 suite: "Nút zoom phóng to sơ đồ toàn màn hình"
-version: "1.0"
+version: "1.1"
 author: "qa-engineer"
-date: "2026-06-11T17:07:15Z"
+date: "2026-06-11T17:35:37Z"
 status: "pass"
 ---
 
@@ -181,9 +181,49 @@ Logic gắn nút zoom, tạo overlay full-viewport, zoom/pan bằng CSS transfor
 
 ---
 
+### TC-MAIN-US-006-08: Smoke-test UI — icon render, spacing, fit-to-viewport, vị trí control
+| Field | Value |
+|---|---|
+| **Requirement / AC** | AC-3 (overlay/controls), AC-4 (fit scale) — phát sinh từ smoke test pre-release v1.2.0 |
+| **Priority** | High |
+| **Type** | UI / Visual |
+| **Preconditions** | jsdom (logic) + Chrome thật (visual confirm) |
+| **Test data** | overlay mở; mock layout 1000×800 trong viewport 800×600 |
+
+**Steps:**
+| # | Action | Expected result |
+|---|---|---|
+| 1 | Kiểm tra `font-family` của nút `+`/`−`/`×` | có `sans-serif` (không kế thừa icon-font của Chat) |
+| 2 | Kiểm tra glyph nút đóng | `textContent === '×'` (U+00D7, Latin chuẩn — không phải U+2715 icon-only) |
+| 3 | Kiểm tra margin nút Zoom | `marginRight > 0` (không sát nút View source) |
+| 4 | Mở overlay với layout 1000×800 / viewport 800×600 | scale fit ≈ 0.675 (< 1, contain 90%) |
+| 5 | Mở overlay khi không đo được layout (jsdom rect 0) | scale giữ 1 (guarded, không lỗi) |
+| 6 | Kiểm tra vị trí control bar | `bottom` set, `top` rỗng, `left:50%` + `translateX(-50%)` (dưới cùng, căn giữa) |
+| 7 | Kiểm tra nền overlay bị blur | style overlay chứa `blur(` (backdrop-filter) |
+| 8 | (manual) Chrome thật — mở Zoom | icon `+ − ×` hiển thị đúng; sơ đồ fit full màn hình; cụm nút nằm dưới-giữa, cách View source; nền sau (trang/sơ đồ gốc) bị mờ |
+
+**Overall expected result:** Icon render đúng (không tofu), nút cách nhau, diagram fit viewport khi mở, control bar ở dưới cùng căn giữa, nền sau bị blur.
+**Actual result:** Bước 1–7 Pass (`zoom.test.ts` smoke-fix block, 7 assertions). Bước 8: _Confirmed bằng smoke test thủ công của người dùng (reload extension)._
+**Status:** Pass
+
+---
+
+## Defect Log (smoke test pre-release v1.2.0)
+Phát hiện khi smoke test thủ công bản build v1.2.0; tất cả đã fix (commit `e30f77e` + reposition control), re-verify bằng unit test + smoke lại.
+
+| # | Severity | Mô tả | Trạng thái | Fix |
+|---|---|---|---|---|
+| D-01 | Minor | Icon `+ − ✕` trong modal hiển thị thành ô vuông (tofu) do kế thừa icon-font Google Chat | Fixed | Set `font-family:Arial` cho control buttons; đổi nút đóng `✕`(U+2715)→`×`(U+00D7) |
+| D-02 | Minor | Nút Zoom sát nút View source | Fixed | Thêm `margin-right:8px` cho zoom button (chỉ margin, giữ kiểu nút) |
+| D-03 | Minor | Mở overlay diagram chưa fit full màn hình (scale cứng = 1) | Fixed | `computeFitScale` contain theo viewport khi mở (FIT_MARGIN 0.9, SCALE_MIN→0.1), guard jsdom |
+| D-04 | Trivial | (Yêu cầu UX) Đưa cụm nút `+ − ×` xuống dưới cùng, căn giữa | Fixed | Control bar `bottom:24px; left:50%; translateX(-50%)` |
+| D-05 | Trivial | (Yêu cầu UX) Làm mờ nền phía sau khi zoom | Fixed | Overlay `backdrop-filter:blur(6px)` (+`-webkit-`) |
+
+Không có defect critical/major. D-01..D-05 đều minor/trivial, đã đóng trước khi release.
+
 ## Test Summary
-- **Total:** 7 cases — **Pass: 5** (TC-01/02/03/05/06 đầy đủ tự động), **Pass-logic+Blocked-runtime: 2** (TC-04 drag UX thật, TC-07 live theme switch — logic Pass, phần Chrome thật pending manual).
-- **Automated suite:** toàn dự án **108/108 pass** (11 test files); `zoom.test.ts` 28 tests, `render.test.ts` zoom assertions 5 tests; coverage **99.06% stmt / 89.47% branch / 100% func / 99.34% lines** (≥80 threshold).
-- **zoom.ts branch coverage note:** V8 báo 60% do null-guards (`?.()`, `if (onMouseMove)`) partially exercised by design — mọi AC branch thực tế đều covered; overall branch 89.47% >> 80% threshold.
-- **Open defects:** critical 0, major 0, minor 0.
-- **Note:** Drag UX thật và live theme switch cần verify thủ công trong Chrome để đóng TC-04 (bước 7) và TC-07 (bước 7).
+- **Total:** 8 cases — **Pass: 6** (TC-01/02/03/05/06/08 đầy đủ tự động + smoke confirm), **Pass-logic+Blocked-runtime: 2** (TC-04 drag UX thật, TC-07 live theme switch — logic Pass, phần Chrome thật pending manual).
+- **Automated suite:** toàn dự án **115/115 pass** (11 test files); `zoom.test.ts` 35 tests, `render.test.ts` zoom assertions 5 tests; coverage **99.1% stmt / 88.88% branch / 100% func / 99.37% lines** (≥80 threshold).
+- **zoom.ts branch coverage note:** V8 báo ~69% do null-guards (`?.()`, `if (onMouseMove)`) partially exercised by design — mọi AC branch thực tế đều covered; overall branch 88.88% >> 80% threshold.
+- **Open defects:** critical 0, major 0, minor 0. (4 defect minor/trivial D-01..D-04 phát hiện trong smoke test → đã fix & re-verify, xem Defect Log.)
+- **Note:** Drag UX thật và live theme switch cần verify thủ công trong Chrome để đóng TC-04 (bước 7) và TC-07 (bước 7). Icon/spacing/fit/vị trí control (TC-08) đã được người dùng smoke confirm sau reload.

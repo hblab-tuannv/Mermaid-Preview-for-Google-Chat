@@ -68,19 +68,24 @@ function openZoomOverlay(preview: HTMLElement, doc: Document, opener: HTMLButton
     'position:fixed',
     'inset:0',
     'z-index:2147483647',
-    'background:rgba(0,0,0,0.75)',
+    'background:rgba(0,0,0,0.6)',
+    // Blur the page (and the original diagram) behind the overlay so the zoomed
+    // clone stands out. -webkit- prefix for Chromium coverage.
+    'backdrop-filter:blur(6px)',
+    '-webkit-backdrop-filter:blur(6px)',
     'display:flex',
     'align-items:center',
     'justify-content:center',
     'cursor:default',
   ].join(';');
 
-  // Control bar (top-right).
+  // Control bar (bottom-center).
   const controls = doc.createElement('div');
   controls.style.cssText = [
     'position:absolute',
-    'top:12px',
-    'right:12px',
+    'bottom:24px',
+    'left:50%',
+    'transform:translateX(-50%)',
     'display:flex',
     'gap:8px',
     'z-index:1',
