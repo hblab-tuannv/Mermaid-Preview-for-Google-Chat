@@ -6,3 +6,5 @@ package-lock.json
 docs/
 backlog/
 .sdlc/
+# Generated index (rebuilt by trace-check.sh)
+STATUS-BOARD.md
