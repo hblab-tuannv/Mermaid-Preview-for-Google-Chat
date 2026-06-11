@@ -17,12 +17,31 @@ export const ZOOM_ATTR = 'data-mermaid-zoom';
 
 /** Scale step for zoom-in/zoom-out buttons. */
 const SCALE_STEP = 0.25;
-/** Minimum scale clamp. */
-const SCALE_MIN = 0.25;
+/** Minimum scale clamp (low enough to fit very large diagrams on open). */
+const SCALE_MIN = 0.1;
 /** Maximum scale clamp. */
 const SCALE_MAX = 8;
 /** Wheel scale sensitivity per 100px of deltaY. */
 const WHEEL_SENSITIVITY = 0.001;
+/** Fraction of the viewport the fitted diagram fills on open (leaves a margin). */
+const FIT_MARGIN = 0.9;
+
+/**
+ * Compute the scale that makes a `width`x`height` diagram fit within a
+ * `vw`x`vh` viewport (contain), leaving a {@link FIT_MARGIN} gap. Returns `null`
+ * when any metric is non-positive (e.g. jsdom, where layout is unavailable) so
+ * the caller can keep the natural scale of 1.
+ */
+function computeFitScale(
+  width: number,
+  height: number,
+  vw: number,
+  vh: number,
+): number | null {
+  if (width <= 0 || height <= 0 || vw <= 0 || vh <= 0) return null;
+  const fit = Math.min((vw * FIT_MARGIN) / width, (vh * FIT_MARGIN) / height);
+  return Math.min(SCALE_MAX, Math.max(SCALE_MIN, fit));
+}
 
 /** Apply the current scale + offset to the stage element. */
 function applyTransform(stage: HTMLElement, scale: number, tx: number, ty: number): void {
@@ -74,7 +93,12 @@ function openZoomOverlay(preview: HTMLElement, doc: Document, opener: HTMLButton
     btn.textContent = label;
     btn.style.cssText = [
       'padding:4px 10px',
-      'font-size:14px',
+      'font-size:16px',
+      // Explicit font so the control glyphs render — without this the button
+      // inherits Google Chat's icon font and '+'/'−'/'×' show up as tofu boxes.
+      'font-family:Arial, Helvetica, sans-serif',
+      'line-height:1',
+      'color:#000',
       'cursor:pointer',
       'border:1px solid #888',
       'background:#fff',
@@ -84,8 +108,10 @@ function openZoomOverlay(preview: HTMLElement, doc: Document, opener: HTMLButton
   };
 
   const zoomInBtn = makeControlBtn('+', 'data-zoom-in');
+  // U+2212 minus and U+00D7 multiplication sign are standard Latin glyphs (in
+  // Arial/Helvetica) — not icon-font-only codepoints.
   const zoomOutBtn = makeControlBtn('−', 'data-zoom-out');
-  const closeBtn = makeControlBtn('✕', 'data-zoom-close');
+  const closeBtn = makeControlBtn('×', 'data-zoom-close');
   controls.append(zoomInBtn, zoomOutBtn, closeBtn);
   overlay.appendChild(controls);
 
@@ -225,6 +251,18 @@ function openZoomOverlay(preview: HTMLElement, doc: Document, opener: HTMLButton
   });
 
   doc.body.appendChild(overlay);
+
+  // Fit the diagram to the viewport on open (contain). Measured AFTER the
+  // overlay is in the DOM so the stage has real layout; guarded so jsdom (rect 0)
+  // keeps the natural scale of 1.
+  const view = doc.defaultView;
+  const rect = stage.getBoundingClientRect();
+  const fit = computeFitScale(rect.width, rect.height, view?.innerWidth ?? 0, view?.innerHeight ?? 0);
+  if (fit !== null) {
+    scale = fit;
+    applyTransform(stage, scale, tx, ty);
+  }
+
   return close;
 }
 
@@ -259,6 +297,9 @@ export function attachZoom(preview: HTMLElement, doc: Document): HTMLButtonEleme
   button.type = 'button';
   button.setAttribute(ZOOM_ATTR, 'true');
   button.textContent = 'Zoom';
+  // Gap so the zoom button is not flush against the following toggle button.
+  // Only margin is set (no background/border) so it keeps the page's button look.
+  button.style.marginRight = '8px';
 
   button.addEventListener('click', () => {
     // Set the singleton handle so resetPreviews can close it via closeActiveOverlay().

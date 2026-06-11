@@ -146,6 +146,87 @@ describe('attachZoom click — AC-3: overlay creation', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Smoke-fix (REL-MAIN-2026-06-11-2): control icons rendered as tofu because the
+// overlay buttons inherited Google Chat's icon font; the zoom button sat flush
+// against the toggle; and the diagram opened at scale 1 instead of fitting.
+// ---------------------------------------------------------------------------
+describe('overlay controls — rendering robustness (smoke-fix)', () => {
+  it('zoom-in/out/close buttons set an explicit sans-serif font-family (no icon-font inheritance)', () => {
+    const { preview } = setup();
+    const btn = attachZoom(preview, document);
+    btn.click();
+    const overlay = getOverlay()!;
+    for (const sel of ['[data-zoom-in]', '[data-zoom-out]', '[data-zoom-close]']) {
+      const b = overlay.querySelector(sel) as HTMLElement;
+      expect(b.style.fontFamily).toMatch(/sans-serif/);
+    }
+  });
+
+  it('close button uses a standard Latin glyph (U+00D7), not an icon-font-only codepoint', () => {
+    const { preview } = setup();
+    const btn = attachZoom(preview, document);
+    btn.click();
+    const overlay = getOverlay()!;
+    const close = overlay.querySelector('[data-zoom-close]') as HTMLElement;
+    expect(close.textContent).toBe('×');
+  });
+});
+
+describe('attachZoom — spacing (smoke-fix)', () => {
+  it('zoom button has a right margin so it is not flush against the toggle', () => {
+    const { preview } = setup();
+    const btn = attachZoom(preview, document);
+    expect(parseFloat(btn.style.marginRight)).toBeGreaterThan(0);
+  });
+});
+
+describe('overlay open — fit to viewport (smoke-fix)', () => {
+  it('scales the diagram to fit the viewport on open when layout metrics are available', () => {
+    const { preview } = setup();
+    // Natural stage 1000x800 in an 800x600 viewport → fit = min(0.72, 0.675).
+    const rectSpy = vi
+      .spyOn(Element.prototype, 'getBoundingClientRect')
+      .mockReturnValue({
+        width: 1000,
+        height: 800,
+        top: 0,
+        left: 0,
+        right: 1000,
+        bottom: 800,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      } as DOMRect);
+    const origW = window.innerWidth;
+    const origH = window.innerHeight;
+    Object.defineProperty(window, 'innerWidth', { value: 800, configurable: true });
+    Object.defineProperty(window, 'innerHeight', { value: 600, configurable: true });
+
+    const btn = attachZoom(preview, document);
+    btn.click();
+    const overlay = getOverlay()!;
+    const stage = getStage(overlay)!;
+    const scale = parseFloat(stage.style.transform.match(/scale\(([^)]+)\)/)?.[1] ?? '1');
+    expect(scale).toBeLessThan(1);
+    expect(scale).toBeCloseTo(0.675, 2);
+
+    rectSpy.mockRestore();
+    Object.defineProperty(window, 'innerWidth', { value: origW, configurable: true });
+    Object.defineProperty(window, 'innerHeight', { value: origH, configurable: true });
+  });
+
+  it('keeps scale 1 when layout metrics are unavailable (jsdom default rect 0)', () => {
+    const { preview } = setup();
+    const btn = attachZoom(preview, document);
+    btn.click();
+    const overlay = getOverlay()!;
+    const stage = getStage(overlay)!;
+    const scale = parseFloat(stage.style.transform.match(/scale\(([^)]+)\)/)?.[1] ?? '1');
+    expect(scale).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // AC-4: Zoom in / zoom out / wheel changes CSS transform scale
 // ---------------------------------------------------------------------------
 describe('zoom controls — AC-4', () => {
