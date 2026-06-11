@@ -1,5 +1,6 @@
 import { detectMermaidBlocks } from '../lib/detect';
 import { Logger, createLogger } from '../lib/logger';
+import { type ObserveOptions, observeChildList } from '../lib/observe';
 import { MermaidRenderer, renderMermaidBlock } from '../lib/render';
 
 /** Message passed to the logger; the logger adds the [mermaid-preview] prefix. */
@@ -26,12 +27,27 @@ export async function previewMermaidIn(
 }
 
 /**
- * Entry point injected into chat.google.com pages: confirm injection, then
- * render any Mermaid blocks already present.
+ * Entry point injected into chat.google.com pages: confirm injection, render
+ * the Mermaid blocks already present, then keep watching for dynamically loaded
+ * messages (scroll-back, incoming messages) and render those too (ADR-MAIN-004).
+ * Returns a disconnect function so the observer can be torn down (AC-6); `opts`
+ * lets tests inject a renderer and a controllable observer.
  */
-export function initContentScript(logger: Logger = createLogger()): void {
+export function initContentScript(
+  logger: Logger = createLogger(),
+  opts: { renderer?: MermaidRenderer; observe?: ObserveOptions } = {},
+): () => void {
   logger.info(CONTENT_LOADED_MESSAGE);
-  void previewMermaidIn();
+  const doc = (globalThis as { document?: Document }).document;
+  void previewMermaidIn(doc, { renderer: opts.renderer });
+  if (!doc) {
+    return () => {};
+  }
+  return observeChildList(
+    doc.body,
+    () => void previewMermaidIn(doc.body, { renderer: opts.renderer }),
+    opts.observe,
+  );
 }
 
 initContentScript();

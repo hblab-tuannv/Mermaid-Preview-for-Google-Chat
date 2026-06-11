@@ -5,6 +5,8 @@
  * the insertion/fallback/idempotency logic is unit-testable without it.
  */
 
+import { attachToggle } from './toggle';
+
 const RENDERED_ATTR = 'data-mermaid-preview';
 /** Marks a source element whose render has already been attempted. */
 const HANDLED_ATTR = 'data-mermaid-rendered';
@@ -101,6 +103,9 @@ export async function renderMermaidBlock(
     container.setAttribute(RENDERED_ATTR, 'rendered');
     container.appendChild(node);
     element.after(container);
+    // Add the preview/source toggle here, on the idempotent success path, so it
+    // is created exactly once per block (ADR-MAIN-004). Default hides the source.
+    attachToggle(element, container, doc);
     return 'rendered';
   } catch {
     // Fallback: leave the original code block visible, add a light error marker.

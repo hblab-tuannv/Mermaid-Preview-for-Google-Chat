@@ -7,3 +7,4 @@
 | ADR-MAIN-001-mv3-vite-toolchain | Build toolchain và kiến trúc Manifest V3 cho extension | MAIN-US-001 | Accepted | [design.md](../../features/MAIN/US-001/design.md) |
 | ADR-MAIN-002-mermaid-detection | Chiến lược phát hiện Mermaid và cách bám DOM Google Chat | MAIN-US-002 | Accepted | [design.md](../../features/MAIN/US-002/design.md) |
 | ADR-MAIN-003-mermaid-render | Tích hợp Mermaid và cơ chế render SVG an toàn | MAIN-US-003 | Accepted | [design.md](../../features/MAIN/US-003/design.md) |
+| ADR-MAIN-004-live-observe-toggle | Quan sát DOM động (MutationObserver) và mô hình toggle preview/source | MAIN-US-004 | Accepted | [design.md](../../features/MAIN/US-004/design.md) |

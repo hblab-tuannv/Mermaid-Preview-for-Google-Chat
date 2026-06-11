@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import mermaid from 'mermaid';
 import { MERMAID_INIT_CONFIG, type MermaidRenderer, renderMermaidBlock } from './render';
+import { TOGGLE_ATTR } from './toggle';
 
 vi.mock('mermaid', () => ({
   default: {
@@ -128,5 +129,25 @@ describe('renderMermaidBlock', () => {
       (s) => s.id,
     );
     expect(new Set(ids).size).toBe(2);
+  });
+
+  // US-004: a successful render attaches a preview/source toggle and hides the
+  // source by default; the error path attaches none.
+  it('attaches a toggle and hides the source on success (US-004 AC-1)', async () => {
+    const b = block('graph TD\nA-->B');
+    await renderMermaidBlock(b, { renderer: okRenderer(), doc: document });
+    const button = document.querySelector(`[${TOGGLE_ATTR}]`);
+    expect(button).not.toBeNull();
+    expect(b.element.hidden).toBe(true); // source hidden by default (preview shown)
+  });
+
+  it('attaches no toggle on the error fallback; source stays visible (US-004 AC-3)', async () => {
+    const b = block('graph TD\nA--');
+    const failing: MermaidRenderer = {
+      render: vi.fn().mockRejectedValue(new Error('Parse error')),
+    };
+    await renderMermaidBlock(b, { renderer: failing });
+    expect(document.querySelector(`[${TOGGLE_ATTR}]`)).toBeNull();
+    expect(b.element.hidden).toBe(false);
   });
 });
