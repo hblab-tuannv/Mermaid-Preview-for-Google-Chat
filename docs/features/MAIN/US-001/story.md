@@ -7,7 +7,7 @@ epic: MAIN
 
 | ID | Epic | Priority | Estimate (SP) | Status |
 |---|---|---|---|---|
-| MAIN-US-001 | MAIN | High | 3 | Ready |
+| MAIN-US-001 | MAIN | High | 3 | Done |
 
 ## Story
 > **As a** developer của extension,
