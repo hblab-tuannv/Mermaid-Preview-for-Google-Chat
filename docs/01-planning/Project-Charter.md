@@ -3,10 +3,10 @@ version: "1.0"
 date: "2026-06-11T10:16:01Z"
 project_name: "Mermaid Preview for Google Chat"
 project_number: "MAIN"
-sponsor: "<name, role>"
+sponsor: "tuannv (Project Sponsor / Owner)"
 project_manager: "product-owner"
-status: "Draft"
-managing_org: "<team / dept>"
+status: "Approved"
+managing_org: "tuannv"
 ---
 
 # Project Charter — Mermaid Preview for Google Chat
@@ -60,4 +60,4 @@ Product-owner có quyền quyết định phạm vi story, thứ tự ưu tiên 
 ## 9. Approvals
 | Name | Role | Signature | Date |
 |---|---|---|---|
-| `<...>` | Sponsor | | `<YYYY-MM-DDThh:mm:ssZ>` |
+| tuannv | Sponsor | Approved (small-mode fold, Gate 2) | 2026-06-11T10:51:29Z |
