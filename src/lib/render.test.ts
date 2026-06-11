@@ -98,7 +98,12 @@ describe('renderMermaidBlock', () => {
     expect(renderer.ids).toHaveLength(1);
   });
 
-  it('does not execute scripts embedded in the SVG output (AC-5)', async () => {
+  it('inserts the SVG as a parsed node, not via innerHTML (AC-5)', async () => {
+    // Structural guarantee: the container's child is a real parsed <svg> element
+    // (DOMParser + importNode), so an embedded <script> ends up as an inert node.
+    // NB: jsdom never executes inserted scripts, so the no-exec check below is a
+    // weak proxy — the real XSS defense is mermaid securityLevel:'strict' (mocked
+    // here) plus manual Phase-5 verification in a real browser.
     const b = block('graph TD\nA-->B');
     const evil: MermaidRenderer = {
       async render(id) {
@@ -106,6 +111,9 @@ describe('renderMermaidBlock', () => {
       },
     };
     await renderMermaidBlock(b, { renderer: evil });
+    const container = b.element.nextElementSibling as HTMLElement;
+    const svg = container.firstElementChild as Element;
+    expect(svg.nodeName.toLowerCase()).toBe('svg'); // appended as element node, not string
     expect((globalThis as Record<string, unknown>).__pwned).toBeUndefined();
   });
 

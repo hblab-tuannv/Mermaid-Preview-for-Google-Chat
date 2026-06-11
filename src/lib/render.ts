@@ -38,7 +38,12 @@ function nextDiagramId(): string {
 
 let cachedDefault: MermaidRenderer | undefined;
 
-/** Default renderer wrapping the real `mermaid`, initialized once, lazily loaded. */
+/**
+ * Default renderer wrapping the real `mermaid`, initialized once. The dynamic
+ * `import('mermaid')` keeps `mermaid` out of test bundles (tests inject a mock),
+ * but in the IIFE content build rollup inlines it — Mermaid ships eagerly inside
+ * `content.js` (the accepted ADR-MAIN-003 trade-off), not network-lazy-loaded.
+ */
 function defaultRenderer(): MermaidRenderer {
   if (cachedDefault) {
     return cachedDefault;

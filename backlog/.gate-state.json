@@ -47,7 +47,8 @@
     },
     "MAIN-US-003": {
       "tests_green": true,
-      "ts": "2026-06-11T12:50:06Z"
+      "ts": "2026-06-11T12:56:41Z",
+      "review_approved": true
     }
   },
   "epics": {},
@@ -59,5 +60,5 @@
     "test_command": "npx vitest run --coverage",
     "coverage_threshold": 80
   },
-  "updated": "2026-06-11T12:50:06Z"
+  "updated": "2026-06-11T12:56:41Z"
 }
