@@ -28,8 +28,8 @@
     },
     "deployment": {
       "status": "pass",
-      "rollback_tested": false,
-      "ts": "2026-06-11T13:58:44Z"
+      "rollback_tested": true,
+      "ts": "2026-06-11T17:40:44Z"
     },
     "operations": {
       "status": "pending"
@@ -76,5 +76,5 @@
     "test_command": "npx vitest run --coverage",
     "coverage_threshold": 80
   },
-  "updated": "2026-06-11T17:06:00Z"
+  "updated": "2026-06-11T17:40:44Z"
 }

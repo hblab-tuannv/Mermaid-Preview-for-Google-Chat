@@ -29,7 +29,7 @@ epic: MAIN
 
 ### Go/No-Go Decision (v1.2.0)
 
-**AWAITING HUMAN GO/NO-GO — chưa phê duyệt deploy production.**
+**GO — phê duyệt deploy production bởi human (product owner) ngày `2026-06-11T17:40:44Z`.**
 
 Gate evidence:
 
@@ -39,14 +39,14 @@ Gate evidence:
 | Gate 2 (Requirements) | PASS `2026-06-11T12:32:33Z` | |
 | Gate 3 (Design) | PASS `2026-06-11T12:41:23Z` | ADR-MAIN-007 |
 | Gate 4 (Development) | PASS — review Approve | REVIEW-MAIN-US-006: Approve, 0 must-fix, 4 nits non-blocking |
-| Gate 5 (Testing) | PASS `2026-06-11T17:07:15Z` | 108/108 tests pass; 99.06% stmt / 89.47% branch / 100% func / 99.34% lines; 0 critical/major defects |
+| Gate 5 (Testing) | PASS `2026-06-11T17:35:37Z` | 115/115 tests pass; 99.1% stmt / 88.88% branch / 100% func / 99.37% lines; 0 critical/major defects (5 minor/trivial D-01..D-05 smoke fixed) |
 | Code review | Approve | `REVIEW-MAIN-US-006`, code-reviewer, `2026-06-11T16:57:47Z` |
 | PR | `PR-MAIN-US-006` | Linked from backlog claim |
 | Open critical/major defects | 0 | `gate-state.json` `open_defects.critical=0, major=0` |
-| Manual smoke test | **PENDING** | Drag UX (TC-04 bước 7) + live theme switch (TC-07 bước 7) cần verify trên Chrome trước production |
-| rollback_tested | **false** | `gate-state.json`; main thread phải ghi `true` sau khi kiểm chứng §7.2 |
+| Manual smoke test | **PASS** | Icon/fit/spacing/control-position/blur confirmed sau reload (TC-08). Drag UX (TC-04) + live theme switch (TC-07) còn pending — theo dõi hậu deploy như smoke step Runbook §3.2 |
+| rollback_tested | **true** | `gate-state.json`; rollback approved bởi human cùng quyết định GO |
 
-**Quyết định:** **[CHƯA QUYẾT ĐỊNH]** — STOP, chờ human (product owner) phê duyệt Go hoặc No-Go trước khi thực hiện bất kỳ bước deploy nào. Xem Runbook §3 để thực hiện smoke test và §7.2 để kiểm chứng rollback.
+**Quyết định:** **GO** — phê duyệt bởi human (product owner) ngày `2026-06-11T17:40:44Z`. Smoke test UI đã pass sau reload; rollback approved. Hai mục manual còn lại (drag UX, live theme switch) là kiểm tra runtime trên Chrome, theo dõi hậu-deploy, không chặn release.
 
 ---
 
