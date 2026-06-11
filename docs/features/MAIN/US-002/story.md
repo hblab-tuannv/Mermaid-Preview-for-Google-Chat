@@ -7,7 +7,7 @@ epic: MAIN
 
 | ID | Epic | Priority | Estimate (SP) | Status |
 |---|---|---|---|---|
-| MAIN-US-002 | MAIN | High | 5 | Ready |
+| MAIN-US-002 | MAIN | High | 5 | Done |
 
 ## Story
 > **As a** người dùng Google Chat,
