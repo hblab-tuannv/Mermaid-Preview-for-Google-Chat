@@ -13,6 +13,14 @@
 const DETECTED_ATTR = 'data-mermaid-preview';
 
 /**
+ * Editable regions to skip. Google Chat's message composer is `contenteditable`,
+ * and rendering a preview there would both show the diagram in the input box and
+ * serialize the injected SVG into the sent message. `contenteditable="false"`
+ * does NOT make a region editable, so it is excluded from the match.
+ */
+const EDITABLE_SELECTOR = '[contenteditable]:not([contenteditable="false"])';
+
+/**
  * Diagram-opening keywords Mermaid recognizes. Matched case-insensitively
  * against the first whitespace-delimited token of a code block. Extend here as
  * Mermaid adds diagram types.
@@ -61,7 +69,9 @@ export function isMermaid(text: string): boolean {
  * Google Chat's markup changes.
  */
 export function findCodeBlocks(root: ParentNode): HTMLElement[] {
-  return Array.from(root.querySelectorAll<HTMLElement>('pre'));
+  return Array.from(root.querySelectorAll<HTMLElement>('pre')).filter(
+    (el) => !el.closest(EDITABLE_SELECTOR) && !el.isContentEditable,
+  );
 }
 
 /**

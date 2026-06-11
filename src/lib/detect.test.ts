@@ -59,6 +59,28 @@ describe('findCodeBlocks', () => {
     const root = mount(codeBlock('graph TD'), codeBlock('noop'));
     expect(findCodeBlocks(root)).toHaveLength(2);
   });
+
+  it('skips code blocks inside a contenteditable compose box', () => {
+    // Google Chat's message composer is contenteditable; rendering there would
+    // show the preview in the input and leak SVG markup into the sent message.
+    const editable = document.createElement('div');
+    editable.setAttribute('contenteditable', 'true');
+    editable.appendChild(codeBlock('graph TD\nA-->B'));
+    const sent = codeBlock('graph TD\nX-->Y'); // a normal (non-editable) message
+    const root = mount(editable, sent);
+    const found = findCodeBlocks(root);
+    expect(found).toHaveLength(1);
+    expect(found[0]).toBe(sent);
+  });
+
+  it('treats contenteditable="false" as a normal (renderable) region', () => {
+    const notEditable = document.createElement('div');
+    notEditable.setAttribute('contenteditable', 'false');
+    const pre = codeBlock('graph TD');
+    notEditable.appendChild(pre);
+    const root = mount(notEditable);
+    expect(findCodeBlocks(root)).toEqual([pre]);
+  });
 });
 
 describe('detectMermaidBlocks', () => {
@@ -113,6 +135,14 @@ describe('detectMermaidBlocks', () => {
   it('is idempotent — an already-detected block is not returned again (AC-6)', () => {
     const root = mount(codeBlock('graph TD\nA-->B'));
     expect(detectMermaidBlocks(root)).toHaveLength(1);
+    expect(detectMermaidBlocks(root)).toHaveLength(0);
+  });
+
+  it('does not detect a Mermaid block while it is being typed in the composer', () => {
+    const editable = document.createElement('div');
+    editable.setAttribute('contenteditable', 'true');
+    editable.appendChild(codeBlock('graph TD\nA-->B'));
+    const root = mount(editable);
     expect(detectMermaidBlocks(root)).toHaveLength(0);
   });
 });
