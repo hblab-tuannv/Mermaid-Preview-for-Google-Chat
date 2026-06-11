@@ -1,0 +1,8 @@
+dist/
+coverage/
+node_modules/
+package-lock.json
+# SDLC docs-as-code follow a template contract, not Prettier formatting
+docs/
+backlog/
+.sdlc/

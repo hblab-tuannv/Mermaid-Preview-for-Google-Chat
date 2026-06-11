@@ -35,7 +35,8 @@
   "stories": {
     "MAIN-US-001": {
       "tests_green": true,
-      "ts": "2026-06-11T11:11:02Z"
+      "ts": "2026-06-11T11:18:44Z",
+      "review_approved": true
     }
   },
   "epics": {},
@@ -47,5 +48,5 @@
     "test_command": "npx vitest run --coverage",
     "coverage_threshold": 80
   },
-  "updated": "2026-06-11T11:11:02Z"
+  "updated": "2026-06-11T11:18:44Z"
 }
