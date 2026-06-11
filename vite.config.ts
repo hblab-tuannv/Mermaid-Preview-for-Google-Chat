@@ -1,5 +1,26 @@
 import { resolve } from 'node:path';
+import type { Plugin } from 'vite';
 import { defineConfig } from 'vitest/config';
+import { escapeNonAscii } from './build/ascii-escape';
+
+/**
+ * Rewrite emitted JS chunks to ASCII-only so Chrome's content-script loader
+ * (`base::IsStringUTF8`, which rejects Unicode non-characters like U+FFFF in the
+ * Mermaid bundle) accepts them. Rolldown (Vite 8) has no ASCII-output option, so
+ * we escape in `generateBundle`, after minification. See ADR-MAIN-005.
+ */
+function asciiOnlyOutput(): Plugin {
+  return {
+    name: 'ascii-only-output',
+    generateBundle(_options, bundle) {
+      for (const file of Object.values(bundle)) {
+        if (file.type === 'chunk') {
+          file.code = escapeNonAscii(file.code);
+        }
+      }
+    },
+  };
+}
 
 /**
  * MV3 content scripts must be classic (IIFE) bundles, so each entry is built
@@ -18,6 +39,7 @@ type Target = keyof typeof entries;
 const target = (process.env.BUILD_TARGET as Target) ?? 'content';
 
 export default defineConfig({
+  plugins: [asciiOnlyOutput()],
   build: {
     outDir: 'dist',
     emptyOutDir: false,
