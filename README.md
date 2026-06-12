@@ -2,6 +2,16 @@
 
 Chrome extension (Manifest V3) that renders Mermaid code blocks inline in Google Chat web.
 
+## Screenshots
+
+Inline rendering of a Mermaid code block in a Google Chat message:
+
+![Mermaid diagram rendered inline in Google Chat](docs/screenshots/inline-render.png)
+
+Click a diagram to open it in a full-screen zoom view:
+
+![Diagram opened in full-screen zoom](docs/screenshots/fullscreen-zoom.png)
+
 ## Develop
 
 ```bash
