@@ -50,6 +50,8 @@ Tính năng chính:
 • Không có server, không thu thập dữ liệu — toàn bộ xử lý diễn ra trong tab trình duyệt của bạn.
 
 Yêu cầu: Chrome ≥ 110. Hỗ trợ tất cả các loại diagram Mermaid (flowchart, sequence, class, state, ER và các loại khác được Mermaid hỗ trợ).
+
+Tuyên bố: Đây là một dự án độc lập, KHÔNG liên kết, KHÔNG được tài trợ và KHÔNG được Google LLC chứng thực. "Google Chat" và "Google" là thương hiệu của Google LLC. "Mermaid" là dự án mã nguồn mở riêng.
 ```
 
 ### English Version
@@ -68,6 +70,8 @@ Key features:
 • No server, no data collection — all processing happens locally in your browser tab.
 
 Requirements: Chrome ≥ 110. Supports all Mermaid diagram types (flowchart, sequence, class, state, ER, and others supported by Mermaid).
+
+Disclaimer: This is an independent project and is NOT affiliated with, sponsored by, or endorsed by Google LLC. "Google Chat" and "Google" are trademarks of Google LLC. "Mermaid" is a separate open-source project.
 ```
 
 ---
@@ -120,6 +124,19 @@ Extension không truy cập bất kỳ trang nào khác ngoài https://chat.goog
 • Toàn bộ xử lý render Mermaid diễn ra client-side trong tab trình duyệt của người dùng.
 • Nội dung tin nhắn không rời khỏi tab.
 ```
+
+---
+
+## Non-affiliation / Trademark (giảm rủi ro bị Store reject)
+
+> **Quan trọng:** Tên extension chứa "Google Chat" (thương hiệu của Google LLC). Reviewer Chrome Web Store thường flag việc dùng thương hiệu bên thứ ba nổi bật mà không có tuyên bố không liên kết. Disclaimer dưới đây ĐÃ được nhúng vào cuối phần Detailed Description (cả VI và EN) — đảm bảo giữ nguyên khi paste lên Dashboard.
+
+```
+Đây là dự án độc lập, không liên kết / không được Google LLC chứng thực. "Google Chat" và "Google" là thương hiệu của Google LLC.
+(EN) Independent project, not affiliated with or endorsed by Google LLC. "Google Chat" and "Google" are trademarks of Google LLC.
+```
+
+> Nếu reviewer vẫn yêu cầu đổi tên, phương án dự phòng: đổi title thành dạng mô tả chức năng không dẫn đầu bằng thương hiệu, ví dụ "Mermaid Diagram Preview — for Google Chat" hoặc "Inline Mermaid Renderer (Google Chat)", giữ disclaimer.
 
 ---
 
