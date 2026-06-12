@@ -1,15 +1,62 @@
 ---
-version: "1.0.0"
-date: "2026-06-12T04:45:56Z"
+version: "1.1.0"
+date: "2026-06-12T06:40:17Z"
 author: release-manager
-status: Released
-release_id: REL-MAIN-2026-06-12-2
+status: Pending Go/No-Go
+release_id: REL-MAIN-2026-06-12-3
 epic: MAIN
 ---
 
 # Release Notes — Mermaid Preview for Google Chat
 
-**Cập nhật lần cuối:** `2026-06-12T04:45:56Z`
+**Cập nhật lần cuối:** `2026-06-12T06:40:17Z`
+
+---
+
+## v1.1.0 — Mở rộng độ phủ loại sơ đồ Mermaid (Chrome Web Store)
+
+**Release ID:** `REL-MAIN-2026-06-12-3`
+**Version bump:** v1.0.0 → v1.1.0 — bổ sung năng lực người dùng (preview nhiều loại sơ đồ hơn), tương thích ngược; minor-bump theo SemVer phù hợp.
+**Kênh phân phối:** Chrome Web Store (cập nhật phiên bản công khai thứ hai).
+
+### Added / Changed (US-009 — ADR-MAIN-009)
+
+- **Preview được MỌI loại sơ đồ Mermaid core — hiện tại và tương lai.** Trước đây phát hiện chỉ chấp nhận block có token đầu nằm trong allowlist 14 từ khoá cứng, nên các loại như **XY Chart, Sankey, Block, C4, Requirement, Packet, Kanban, Architecture, Radar, Treemap** không hiện preview dù thư viện Mermaid thừa sức vẽ. Giờ:
+  - **Tin nhãn fence ```mermaid:** Khi block đã gửi mang nhãn ngôn ngữ `mermaid` (Google Chat giữ ở dòng đầu — xác nhận từ DOM thật, INC-MAIN-2026-06-11-02), extension nhận diện ngay **bất kể loại sơ đồ**, để parser Mermaid + fallback an toàn quyết định. Tự phủ mọi loại mới Mermaid thêm về sau, không cần cập nhật danh sách.
+  - **Mở rộng allowlist cho block dán thô (không nhãn):** thêm `xychart-beta`, `sankey-beta`, `block-beta`, `packet-beta`, `requirementDiagram`, `C4Context/Container/Component/Dynamic/Deployment`, `kanban`, `architecture-beta`, `radar-beta`, `treemap` (tên đối chiếu detector Mermaid 11.15.0; mỗi loại đã verify render được bằng `mermaid.detectType`). **`zenuml`** chỉ hỗ trợ qua fence ```mermaid (là external diagram không bundled trong core — render lỗi nếu dán thô).
+  - US: `MAIN-US-009` / PR: `PR-MAIN-US-009` / ADR: `ADR-MAIN-009` (supersedes ADR-MAIN-002) / CR: `CR-MAIN-2026-06-12-03`
+
+### Behavior change (chủ đích, human-approved Gate-1 + ADR-MAIN-009)
+
+- Một block người dùng **chủ động gắn nhãn ```mermaid** nhưng nội dung KHÔNG parse được giờ hiện marker "Mermaid: could not render diagram" (đường error-fallback sẵn có) thay vì nằm im như trước. Code block gốc vẫn hiển thị; không vỡ trang. Đây là đánh đổi đã chấp nhận: người dùng đã tường minh đánh dấu "đây là mermaid".
+
+### Packaging hygiene
+
+- `scripts/package.mjs` chuyển sang `archive.glob('**/*', { dot: false })` để **loại bỏ `.DS_Store`/`Thumbs.db`** khỏi gói zip (trước đây macOS Finder có thể chèn `.DS_Store` vào `dist/` giữa build và package, lọt vào gói upload Store). Gói `mermaid-preview-google-chat-v1.1.0.zip` xác nhận 7 file, không có OS cruft.
+
+### Không đổi
+
+Render/toggle/zoom/theme/download, `content_scripts.matches` (`https://chat.google.com/*`), permission, không thêm `action`. Không thêm thư viện vào đường detect (giữ ràng buộc hiệu năng ADR-MAIN-002/009).
+
+### Go/No-Go Checklist (v1.1.0 — REL-MAIN-2026-06-12-3)
+
+| Hạng mục | Trạng thái | Ghi chú |
+|---|---|---|
+| Gate 1 (Requirements / Scope+AC) | PASS | CR-MAIN-2026-06-12-03 + US-009 AC-1..AC-6 human-approved `2026-06-12T06:40:17Z` |
+| Gate ◆ (Design / ADR) | PASS | ADR-MAIN-009 Accepted (human-approved); ADR-MAIN-002 → Superseded |
+| Gate 4 (Development) | PASS | PR-MAIN-US-009; REVIEW-MAIN-US-009 Approve, 0 must-fix (2 nit đã sửa: radar-beta, JSDoc header) |
+| Gate 5 (Testing) | PASS | 188/188 tests pass; detect.ts 100% stmt / 95.45% branch; tổng ≥80% branch; 0 critical / 0 major; TC-MAIN-US-009-01..06 |
+| Render verification (offline) | PASS | `mermaid.detectType` (post-`initialize`, mermaid 11.15.0) xác nhận 11/12 loại bổ sung render được; `zenuml` loại khỏi unfenced allowlist (external diagram) |
+| Browser smoke (real Chat) | **OUTSTANDING** | Chưa chạy trên chat.google.com thật (cần auth). INC-02 action-item coi smoke là bắt buộc cho release — human cân nhắc waive có chủ đích hay chạy trước GO |
+| Open critical/major defects | 0 | |
+| Version consistency | YES | manifest.json = 1.1.0; package.json = 1.1.0; tên zip = v1.1.0 |
+| Packaging verified | YES | `npm run package` → `mermaid-preview-google-chat-v1.1.0.zip` (859554 B, 7 file, không `.DS_Store`) |
+| Rollback documented | YES | Runbook §7 — dev: revert PR-MAIN-US-009; Store: hotfix v1.1.1 hoặc unpublish/disable (giống §7B) |
+| rollback_tested | PENDING | Main thread ghi qua `/sdlc:gono` trước GO |
+| Images on Dashboard | N/A | Không đổi asset (đã upload ở v1.0.0); cập nhật version không yêu cầu ảnh mới |
+| Quyết định Go/No-Go | **PENDING — chờ human** | Chưa phê duyệt; không deploy tự động |
+
+> Đây là bản nháp release chờ Go/No-Go. Thao tác submit bản cập nhật lên Chrome Web Store do human/operator thực hiện thủ công trên Developer Dashboard (upload zip mới, tăng version) sau khi GO. Không deploy tự động.
 
 ---
 

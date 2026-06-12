@@ -11,32 +11,31 @@ import { describe, expect, it, afterAll } from 'vitest';
 
 const ROOT = resolve(__dirname, '..');
 
+/**
+ * The single source-of-truth version, read from package.json at test time.
+ * Assertions derive from this rather than a hardcoded literal so a release
+ * version bump (e.g. 1.0.0 → 1.1.0, US-009) does not require editing the test —
+ * the meaningful invariants are "valid semver" and "manifest === package".
+ */
+const EXPECTED_VERSION = (
+  JSON.parse(readFileSync(resolve(ROOT, 'package.json'), 'utf-8')) as { version: string }
+).version;
+
 // ---------------------------------------------------------------------------
-// AC-1: Version reset to 1.0.0 in both package.json and manifest.json
+// AC-1: Version consistency — valid semver, manifest.json matches package.json
+// (US-008 reset the public version to 1.0.0; this stays version-agnostic so it
+//  keeps holding across later bumps.)
 // ---------------------------------------------------------------------------
-describe('AC-1: version reset to 1.0.0', () => {
-  it('package.json has version 1.0.0', () => {
-    const pkg = JSON.parse(readFileSync(resolve(ROOT, 'package.json'), 'utf-8')) as {
-      version: string;
-    };
-    expect(pkg.version).toBe('1.0.0');
+describe('AC-1: version consistency', () => {
+  it('package.json has a valid semver version', () => {
+    expect(EXPECTED_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
-  it('public/manifest.json has version 1.0.0', () => {
+  it('public/manifest.json version matches package.json', () => {
     const manifest = JSON.parse(
       readFileSync(resolve(ROOT, 'public/manifest.json'), 'utf-8'),
     ) as { version: string };
-    expect(manifest.version).toBe('1.0.0');
-  });
-
-  it('both versions match', () => {
-    const pkg = JSON.parse(readFileSync(resolve(ROOT, 'package.json'), 'utf-8')) as {
-      version: string;
-    };
-    const manifest = JSON.parse(
-      readFileSync(resolve(ROOT, 'public/manifest.json'), 'utf-8'),
-    ) as { version: string };
-    expect(pkg.version).toBe(manifest.version);
+    expect(manifest.version).toBe(EXPECTED_VERSION);
   });
 });
 
@@ -212,7 +211,9 @@ describe('AC-3: packaging scripts wiring', () => {
 // AC-3 end-to-end: run npm run package, assert zip exists with correct entries
 // ---------------------------------------------------------------------------
 describe('AC-3 end-to-end: npm run package', () => {
-  const zipName = 'mermaid-preview-google-chat-v1.0.0.zip';
+  // Derive the zip name from the current version so a version bump does not
+  // break this test (the packager names the zip from package.json's version).
+  const zipName = `mermaid-preview-google-chat-v${EXPECTED_VERSION}.zip`;
   const zipPath = resolve(ROOT, zipName);
 
   afterAll(() => {
@@ -252,5 +253,13 @@ describe('AC-3 end-to-end: npm run package', () => {
     const content = buf.toString('binary');
     expect(content).toContain('content.js');
     expect(content).not.toContain('dist/content.js');
+  });
+
+  it('zip excludes OS cruft (.DS_Store / Thumbs.db)', () => {
+    // package.mjs uses glob with dot:false so macOS/Windows metadata files that
+    // may appear in dist/ between build and package never ship to the Store.
+    const content = readFileSync(zipPath).toString('binary');
+    expect(content).not.toContain('.DS_Store');
+    expect(content).not.toContain('Thumbs.db');
   });
 });

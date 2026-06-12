@@ -60,6 +60,18 @@ describe('isMermaid', () => {
     expect(isMermaid('just some prose')).toBe(false);
   });
 
+  it('accepts newly added diagram types when unfenced (AC-2, US-009)', () => {
+    // Types absent from the original 14-keyword allowlist; now covered for
+    // bare (unfenced) blocks too. -beta suffixes are part of the real names.
+    expect(isMermaid('xychart-beta\n  title "Sales"')).toBe(true);
+    expect(isMermaid('sankey-beta\nA,B,10')).toBe(true);
+    expect(isMermaid('block-beta\ncolumns 1')).toBe(true);
+    expect(isMermaid('requirementDiagram\nrequirement r {}')).toBe(true);
+    expect(isMermaid('C4Context\ntitle System')).toBe(true);
+    expect(isMermaid('architecture-beta\ngroup api')).toBe(true);
+    expect(isMermaid('treemap\nroot')).toBe(true);
+  });
+
   it('rejects empty or whitespace-only text without throwing (AC-4)', () => {
     expect(isMermaid('')).toBe(false);
     expect(isMermaid('   \n\t  ')).toBe(false);
@@ -192,5 +204,52 @@ describe('detectMermaidBlocks', () => {
   it('ignores a code block that is only the bare "mermaid" tag with no diagram', () => {
     const root = mount(chatSentBlock([], { langTag: true }));
     expect(detectMermaidBlocks(root)).toHaveLength(0);
+  });
+
+  // --- US-009: trust the ```mermaid fence + expanded allowlist (ADR-MAIN-009) ---
+
+  it('detects a fenced diagram whose type is NOT in the keyword allowlist (AC-1, fence-trust)', () => {
+    // xychart-beta is not a legacy keyword; the explicit ```mermaid fence is
+    // trusted, so detection no longer gates on the keyword list.
+    const root = mount(chatSentBlock(['xychart-beta', '  title "Sales"'], { langTag: true }));
+    const found = detectMermaidBlocks(root);
+    expect(found).toHaveLength(1);
+    expect(found[0].source).toBe('xychart-beta\n  title "Sales"');
+  });
+
+  it('detects a newly added diagram type when unfenced (AC-2)', () => {
+    const root = mount(codeBlock('xychart-beta\n  title "Sales"'));
+    const found = detectMermaidBlocks(root);
+    expect(found).toHaveLength(1);
+    expect(found[0].source).toBe('xychart-beta\n  title "Sales"');
+  });
+
+  it('detects a fenced block even when its body is not valid Mermaid, leaving render to fall back (AC-4)', () => {
+    // Accepted behavior change (ADR-MAIN-009): a block the user explicitly
+    // fenced as ```mermaid is detected even if unparseable; render.ts then
+    // shows the existing "could not render" marker. Previously it stayed inert.
+    const root = mount(chatSentBlock(['function foo(){}'], { langTag: true }));
+    const found = detectMermaidBlocks(root);
+    expect(found).toHaveLength(1);
+    expect(found[0].source).toBe('function foo(){}');
+  });
+
+  it('still ignores an unfenced non-Mermaid block (AC-3, no false positive)', () => {
+    const root = mount(codeBlock('function foo(){}'), codeBlock('{"a":1}'));
+    expect(detectMermaidBlocks(root)).toHaveLength(0);
+  });
+
+  it('does NOT detect an unfenced zenuml block — core mermaid cannot render it (AC-2/AC-3)', () => {
+    // zenuml is an external (non-bundled) diagram; adding it to the unfenced
+    // allowlist would convert a clean code block into a render-error marker.
+    const root = mount(codeBlock('zenuml\nA.method()'));
+    expect(detectMermaidBlocks(root)).toHaveLength(0);
+  });
+
+  it('still detects a fenced zenuml block (fence-trust) so AC-4 fallback applies', () => {
+    const root = mount(chatSentBlock(['zenuml', 'A.method()'], { langTag: true }));
+    const found = detectMermaidBlocks(root);
+    expect(found).toHaveLength(1);
+    expect(found[0].source).toBe('zenuml\nA.method()');
   });
 });

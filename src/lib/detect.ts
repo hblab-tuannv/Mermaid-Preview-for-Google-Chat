@@ -1,12 +1,17 @@
 /**
- * Mermaid detection for Google Chat code blocks (ADR-MAIN-002).
+ * Mermaid detection for Google Chat code blocks (ADR-MAIN-009, supersedes
+ * ADR-MAIN-002).
  *
  * Two concerns are kept separate so the fragile part (the DOM selector) is
  * isolated and the content heuristic stays pure and unit-testable:
  *   - {@link findCodeBlocks} — locates candidate code-block elements (the one
  *     place to adjust if Google Chat changes its DOM).
- *   - {@link isMermaid} — decides whether a block's text is a Mermaid diagram
- *     by matching the first token against {@link MERMAID_KEYWORDS}.
+ *   - {@link detectMermaidBlocks} — decides whether a block is Mermaid with a
+ *     two-tier rule: an explicit ` ```mermaid ` fence is trusted directly (so
+ *     every current and future diagram type is detected, with render's
+ *     error-fallback catching unparseable bodies); an unfenced block falls back
+ *     to the {@link isMermaid} keyword heuristic against {@link MERMAID_KEYWORDS}
+ *     to keep false positives off ordinary code.
  */
 
 /** Marker attribute used to make detection idempotent across repeated scans. */
@@ -22,8 +27,12 @@ const EDITABLE_SELECTOR = '[contenteditable]:not([contenteditable="false"])';
 
 /**
  * Diagram-opening keywords Mermaid recognizes. Matched case-insensitively
- * against the first whitespace-delimited token of a code block. Extend here as
- * Mermaid adds diagram types.
+ * against the first whitespace-delimited token of a code block.
+ *
+ * This list is the heuristic for UNFENCED blocks only (pasted without the
+ * ` ```mermaid ` tag). A fenced block is trusted directly and skips this list
+ * entirely (ADR-MAIN-009), so newer/future diagram types render even if absent
+ * here. Extend this only to improve detection of unfenced blocks.
  */
 export const MERMAID_KEYWORDS = [
   'graph',
@@ -40,7 +49,30 @@ export const MERMAID_KEYWORDS = [
   'mindmap',
   'timeline',
   'quadrantChart',
+  // Added in US-009 (ADR-MAIN-009) — names per Mermaid, including -beta suffixes.
+  'xychart-beta',
+  'sankey-beta',
+  'block-beta',
+  'packet-beta',
+  'requirementDiagram',
+  'C4Context',
+  'C4Container',
+  'C4Component',
+  'C4Dynamic',
+  'C4Deployment',
+  'kanban',
+  'architecture-beta',
+  'radar-beta',
+  'treemap',
 ] as const;
+
+// Deliberately NOT in the unfenced allowlist: `zenuml`. ZenUML ships as an
+// EXTERNAL Mermaid diagram (`@mermaid-js/mermaid-zenuml`, registered via
+// registerExternalDiagrams) and is NOT in the bundled core; `mermaid.render`
+// throws on it (verified against mermaid 11.15.0). Listing it here would turn a
+// clean unfenced `zenuml` code block into a "could not render" marker — a strict
+// regression. A fence-tagged zenuml block is still detected (fence-trust) and
+// shows that marker, which is the accepted AC-4 behavior for explicit fences.
 
 const KEYWORD_SET = new Set(MERMAID_KEYWORDS.map((k) => k.toLowerCase()));
 
@@ -76,18 +108,23 @@ export function extractSource(el: HTMLElement): string {
 }
 
 /**
- * Strip a leading ` ```mermaid ` language-tag line. Chat keeps that tag as the
- * first text line of the sent code block (e.g. `"mermaid\ngraph TD..."`), which
- * is not a diagram keyword. Only an exact `mermaid` first line is removed, so
- * real keywords like `mindmap` are never touched.
+ * Strip a leading ` ```mermaid ` language-tag line and report whether one was
+ * present. Chat keeps that tag as the first text line of the sent code block
+ * (e.g. `"mermaid\ngraph TD..."`), which is not a diagram keyword. Only an exact
+ * `mermaid` first line is removed, so real keywords like `mindmap` are never
+ * touched.
+ *
+ * `hadTag` lets {@link detectMermaidBlocks} trust an explicit fence and skip the
+ * keyword heuristic (ADR-MAIN-009): an explicit ` ```mermaid ` tag is a reliable
+ * user signal, so every current and future diagram type is detected.
  */
-export function stripLanguageTag(source: string): string {
+export function stripLanguageTag(source: string): { source: string; hadTag: boolean } {
   const nl = source.indexOf('\n');
   const firstLine = (nl === -1 ? source : source.slice(0, nl)).trim();
   if (firstLine.toLowerCase() === LANGUAGE_TAG) {
-    return nl === -1 ? '' : source.slice(nl + 1);
+    return { source: nl === -1 ? '' : source.slice(nl + 1), hadTag: true };
   }
-  return source;
+  return { source, hadTag: false };
 }
 
 /**
@@ -125,8 +162,14 @@ export function detectMermaidBlocks(root: ParentNode): MermaidBlock[] {
     if (element.hasAttribute(DETECTED_ATTR)) {
       continue;
     }
-    const source = stripLanguageTag(extractSource(element));
-    if (!isMermaid(source)) {
+    const { source, hadTag } = stripLanguageTag(extractSource(element));
+    // A fenced ` ```mermaid ` block is trusted directly (any non-empty body is a
+    // candidate, regardless of keyword) so all diagram types — current and
+    // future — are detected; an unparseable body falls back at render time.
+    // Unfenced blocks still go through the keyword heuristic to avoid false
+    // positives on ordinary code (ADR-MAIN-009).
+    const isCandidate = hadTag ? source.trim() !== '' : isMermaid(source);
+    if (!isCandidate) {
       continue;
     }
     element.setAttribute(DETECTED_ATTR, 'detected');

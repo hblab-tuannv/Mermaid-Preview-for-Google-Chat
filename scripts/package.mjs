@@ -44,10 +44,12 @@ const done = new Promise((res, rej) => {
 
 archive.pipe(output);
 
-// Add dist/ contents at archive ROOT — second arg false = no dest prefix.
-// This ensures manifest.json, content.js, background.js, icons/ etc. all land
-// at root level in the zip, not nested under dist/.
-archive.directory(distPath, false);
+// Add dist/ contents at archive ROOT (cwd-relative paths land at top level,
+// not nested under dist/). `dot: false` drops OS cruft like macOS Finder's
+// .DS_Store — which can appear in dist/ between build and package — so it never
+// ships to the Chrome Web Store. archiver's directory() third arg is per-entry
+// data, NOT a glob filter, so glob() is the correct way to exclude files.
+archive.glob('**/*', { cwd: distPath, dot: false });
 
 await archive.finalize();
 await done;

@@ -11,3 +11,5 @@
 | 5 | MAIN-US-005 | Tự động theme sáng/tối theo giao diện Google Chat | Done | US-004 |
 | 6 | MAIN-US-006 | Nút zoom phóng to sơ đồ toàn màn hình (overlay) | Done | US-003, US-004 |
 | 7 | MAIN-US-007 | Nút tải sơ đồ — Download PNG chất lượng cao (nền trong suốt) + SVG vector | Done | US-003, US-006 |
+| 8 | MAIN-US-008 | Chrome Web Store publish readiness — v1.0.0 + brand icons + packaging | Done | US-001..007 |
+| 9 | MAIN-US-009 | Mở rộng độ phủ loại sơ đồ Mermaid (tin fence + mở rộng keyword) | Done | US-002, US-003 |
