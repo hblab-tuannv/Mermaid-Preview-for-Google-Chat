@@ -1,22 +1,95 @@
 ---
-version: "1.3.0"
-date: "2026-06-12T03:19:55Z"
+version: "1.0.0"
+date: "2026-06-12T04:45:56Z"
 author: release-manager
-status: Draft
-release_id: REL-MAIN-2026-06-12-1
+status: Released
+release_id: REL-MAIN-2026-06-12-2
 epic: MAIN
 ---
 
-# Release Notes — Mermaid Preview for Google Chat v1.3.0
+# Release Notes — Mermaid Preview for Google Chat
 
-**Ngày phát hành:** `2026-06-12T03:19:55Z`
+**Cập nhật lần cuối:** `2026-06-12T04:45:56Z`
 
 ---
 
-## v1.3.0 — PNG + SVG download buttons cho mỗi sơ đồ Mermaid
+## v1.0.0 — First Public Chrome Web Store Release
+
+**Release ID:** `REL-MAIN-2026-06-12-2`
+**Ngày chuẩn bị:** `2026-06-12T04:45:56Z`
+**Kênh phân phối:** Chrome Web Store (phiên bản công khai đầu tiên)
+
+### Lịch sử phiên bản — Bối cảnh
+
+Các phiên bản nội bộ `0.1.0` → `1.3.0` là các build dev-only, phân phối bằng **load-unpacked** (Developer Mode), **chưa bao giờ được phát hành công khai**. `package.json` có `"private": true` trong suốt giai đoạn đó. Phiên bản công khai **bắt đầu từ 1.0.0** — đây là lần đầu tiên extension xuất hiện trên Chrome Web Store và người dùng có thể cài một-click không cần Developer Mode.
+
+### Tính năng ra mắt (US-001 → US-007, shipped together)
+
+Toàn bộ tính năng đã hoàn thiện qua 7 user story nội bộ được ship cùng nhau trong lần phát hành đầu tiên này:
+
+- **Scaffold MV3 + inject content-script** vào `https://chat.google.com/*` (US-001 / `PR-MAIN-US-001`)
+- **Phát hiện code block Mermaid** trong DOM tin nhắn Google Chat (US-002 / `PR-MAIN-US-002`)
+- **Render Mermaid thành SVG inline** với fallback an toàn khi parse lỗi (US-003 / `PR-MAIN-US-003`)
+- **Toggle preview/source + MutationObserver** cho tin nhắn tải động (US-004 / `PR-MAIN-US-004`)
+- **Auto theme sáng/tối** khớp giao diện Google Chat, render lại khi đổi theme (US-005 / `PR-MAIN-US-005`)
+- **Fullscreen-zoom overlay** — zoom in/out (nút + scroll wheel), drag-to-pan, đóng bằng Esc/backdrop/X (US-006 / `PR-MAIN-US-006` / ADR-MAIN-007)
+- **Nút tải PNG và SVG** trên mỗi sơ đồ render thành công; PNG best-effort (sequence/class/state/ER) + auto-fallback SVG + notice khi flowchart/foreignObject (US-007 / `PR-MAIN-US-007` / ADR-MAIN-008)
+
+### Packaging (US-008 — AC-1, AC-2, AC-3)
+
+- Version reset về **1.0.0** (cả `manifest.json` và `package.json`) — phiên bản công khai đầu tiên.
+- `manifest.json` bổ sung trường `icons` (16/48/128 PNG) — không có trường `action`.
+- `npm run package` tạo `mermaid-preview-google-chat-v1.0.0.zip` từ nội dung `dist/` (icons được copy vào `dist/icons/` trước khi zip).
+
+### Known Limitation
+
+**PNG là best-effort, không phổ quát.** Flowchart và diagram dùng `<foreignObject>` HTML làm canvas bị tainted → extension tự động fallback về SVG + notice. SVG là định dạng chất lượng chính, lossless, phổ quát. Xem ADR-MAIN-008 và release notes v1.3.0 (internal) để biết chi tiết kỹ thuật.
+
+### Tài liệu Deployment (US-008 — AC-4, AC-5, AC-6)
+
+| Tài liệu | Đường dẫn |
+|---|---|
+| Deployment Plan (CWS first publish) | `docs/06-deployment/MAIN/Deployment-Plan-CWS.md` |
+| Store Listing Draft | `docs/06-deployment/MAIN/Store-Listing.md` |
+| Runbook (bao gồm §7 Rollback CWS) | `docs/06-deployment/MAIN/Runbook.md` |
+
+### Go/No-Go Checklist (v1.0.0 — REL-MAIN-2026-06-12-2)
+
+| Hạng mục | Trạng thái | Ghi chú |
+|---|---|---|
+| Gate 1 (Planning) | PASS | CR-MAIN-2026-06-12-02 human-approved; Path B, v1.0.0 |
+| Gate 2 (Requirements) | PASS | AC-1..AC-6 đầy đủ; scope phê duyệt `2026-06-12T03:53:41Z` |
+| Gate 3 (Design) | PASS | ADR không cần cho phase này (docs-only AC-4..AC-6); AC-1..AC-3 không thay đổi logic render |
+| Gate 4 (Development) | PASS | PR: `PR-MAIN-US-008`; AC-1/AC-2/AC-3 reviewed Approve |
+| Gate 5 (Testing) | PASS | 181/181 tests pass; 81.11% branch (≥ 80% threshold); 0 critical / 0 major defect; TC-MAIN-US-008 |
+| Open critical/major defects | 0 | 0 critical, 0 major — không có defect chặn release |
+| Packaging verified | YES | `npm run package` → `mermaid-preview-google-chat-v1.0.0.zip`; zip chứa manifest, content.js, background.js, icons/ |
+| Version consistency | YES | `manifest.json` = 1.0.0; `package.json` = 1.0.0; tên zip = v1.0.0 |
+| Rollback documented | YES | Runbook §7A (load-unpacked) và §7B (CWS: unpublish hoặc hotfix v1.0.1); phân biệt rõ hai ngữ cảnh |
+| Store Listing draft sẵn sàng | YES | `docs/06-deployment/MAIN/Store-Listing.md` — title, summary, description (VI+EN), category, privacy, permission justification |
+| Deployment Plan sẵn sàng | YES | `docs/06-deployment/MAIN/Deployment-Plan-CWS.md` — 8 bước từng bước có validation |
+| Images pending on Dashboard | PENDING | 128×128 store icon + ≥1 screenshot (1280×800) chưa upload — operator thực hiện trên Dashboard trước khi submit |
+| rollback_tested | N/A (waived) | Bản Store công khai đầu KHÔNG có version cũ để rollback; Store rollback = unpublish/disable hoặc hotfix v1.0.1 (Runbook §7B) — không thể pre-test trước khi publish. Human GO bao trùm rủi ro này. |
+
+### Quyết định Go/No-Go (v1.0.0)
+
+**GO — phê duyệt phát hành công khai Chrome Web Store bởi human (product owner) ngày `2026-06-12T04:45:56Z`.**
+
+- **Cơ sở:** Toàn bộ Gate 1–5 PASS; 0 defect critical/major; 181 test pass, branch 81.11%; packaging verified (`mermaid-preview-google-chat-v1.0.0.zip`, 859 KB, không lọt asset thừa); version nhất quán 1.0.0; rollback documented (Runbook §7A/§7B).
+- **Icon:** 16/48/128 PNG sinh từ icon thương hiệu gốc `assets/icon-raw.png` (1024×1024) bằng `sips`; script sinh icon placeholder tạm (`scripts/gen-icons.mjs`) đã gỡ bỏ; raw giữ ở `assets/` (không ship trong gói).
+- **Việc operator còn lại (thủ công, ngoài phạm vi tự động):** đăng ký CWS developer + phí ~$5, upload `mermaid-diagram-...zip`, upload ảnh Dashboard (128×128 store icon + ≥1 screenshot 1280×800 + promo 440×280), điền Listing + Privacy, submit review. Theo `Deployment-Plan-CWS.md`.
+
+> Đây là quyết định phát hành; thao tác submit thực tế lên Chrome Web Store do human/operator thực hiện thủ công trên Developer Dashboard (Claude không thể tự upload). Không deploy tự động.
+
+---
+
+---
+
+## v1.3.0 — PNG + SVG download buttons cho mỗi sơ đồ Mermaid (internal build)
 
 **Release ID:** `REL-MAIN-2026-06-12-1`
 **Version bump:** v1.2.0 → v1.3.0 — tính năng mới additive (download control); không phá vỡ tương thích ngược; minor-bump theo SemVer phù hợp.
+**Kênh phân phối:** Load-unpacked (internal — chưa bao giờ public).
 
 ### Added
 
@@ -38,7 +111,9 @@ Smoke gate thực tế trên Chrome thật, Mermaid 11.15.0:
 - **SVG button (cả hai loại):** vector gốc lossless tải thành công (`mermaid-diagram-1.svg` 14840 B, `mermaid-diagram-2.svg` 22875 B).
 - **AC-1 button presence:** cả flowchart và sequence đều có container `data-mermaid-download` với hai nút "PNG" và "SVG".
 
-### Go/No-Go Checklist (v1.3.0)
+### Go/No-Go Decision (v1.3.0)
+
+**GO — phê duyệt deploy production (load-unpacked) bởi human ngày `2026-06-12T03:19:55Z`.**
 
 | Hạng mục | Trạng thái | Ghi chú |
 |---|---|---|
@@ -54,16 +129,15 @@ Smoke gate thực tế trên Chrome thật, Mermaid 11.15.0:
 | Rollback documented | YES | Runbook §7 — inline rollback section updated for v1.3.0 |
 | rollback_tested | PENDING | Phải được main thread ghi `rollback_tested: true` trước Go (qua `/sdlc:gono`) |
 
-**AWAITING HUMAN GO/NO-GO**
-
 ---
 
 ---
 
-## v1.2.0 — Fullscreen-zoom overlay for Mermaid diagrams
+## v1.2.0 — Fullscreen-zoom overlay for Mermaid diagrams (internal build)
 
 **Release ID:** `REL-MAIN-2026-06-11-2`
 **Version bump:** v1.1.0 → v1.2.0 — đây là tính năng mới đáng kể dành cho người dùng (overlay + zoom/pan hoàn chỉnh), không chỉ là bugfix; minor-bump (1.2.0) theo SemVer phù hợp cho bổ sung feature tương thích ngược.
+**Kênh phân phối:** Load-unpacked (internal — chưa bao giờ public).
 
 ### Added
 
@@ -99,12 +173,13 @@ Gate evidence:
 
 ---
 
-## v1.1.0 — Auto light/dark theme + core features
+## v1.1.0 — Auto light/dark theme + core features (internal build)
 
 **Release ID:** `REL-MAIN-2026-06-11`
 **Ngày phát hành:** `2026-06-11T15:25:45Z`
+**Kênh phân phối:** Load-unpacked (internal — chưa bao giờ public).
 
-> v1.0.0 không khả dụng khi nạp thực tế (xem INC-01/INC-02); v1.1.0 là bản hoạt động đầu tiên đã xác nhận trên chat.google.com, kèm tính năng auto theme.
+> v1.0.0 nội bộ không khả dụng khi nạp thực tế (xem INC-01/INC-02); v1.1.0 là bản hoạt động đầu tiên đã xác nhận trên chat.google.com, kèm tính năng auto theme.
 
 ### Added
 

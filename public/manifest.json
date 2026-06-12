@@ -1,9 +1,14 @@
 {
   "manifest_version": 3,
   "name": "Mermaid Preview for Google Chat",
-  "version": "1.3.0",
+  "version": "1.0.0",
   "description": "Render Mermaid code blocks inline in Google Chat.",
   "minimum_chrome_version": "110",
+  "icons": {
+    "16": "icons/16.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
   "background": {
     "service_worker": "background.js"
   },

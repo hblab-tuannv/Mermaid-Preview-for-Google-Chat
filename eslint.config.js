@@ -13,4 +13,18 @@ export default tseslint.config(
       'no-console': 'off',
     },
   },
+  // Node.js script files: allow Node built-in globals (Buffer, etc.)
+  {
+    files: ['scripts/**/*.mjs', 'build/**/*.js', 'build/**/*.ts'],
+    languageOptions: {
+      globals: {
+        Buffer: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        require: 'readonly',
+        module: 'readonly',
+        exports: 'readonly',
+      },
+    },
+  },
 );

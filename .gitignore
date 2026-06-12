@@ -4,3 +4,4 @@ coverage/
 *.log
 .sdlc/
 .DS_Store
+mermaid-preview-google-chat-v*.zip
