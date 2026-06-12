@@ -1,15 +1,62 @@
 ---
-version: "1.2.0"
-date: "2026-06-11T17:11:45Z"
+version: "1.3.0"
+date: "2026-06-12T03:19:55Z"
 author: release-manager
 status: Draft
-release_id: REL-MAIN-2026-06-11-2
+release_id: REL-MAIN-2026-06-12-1
 epic: MAIN
 ---
 
-# Release Notes — Mermaid Preview for Google Chat v1.2.0
+# Release Notes — Mermaid Preview for Google Chat v1.3.0
 
-**Ngày phát hành:** `2026-06-11T17:11:45Z`
+**Ngày phát hành:** `2026-06-12T03:19:55Z`
+
+---
+
+## v1.3.0 — PNG + SVG download buttons cho mỗi sơ đồ Mermaid
+
+**Release ID:** `REL-MAIN-2026-06-12-1`
+**Version bump:** v1.2.0 → v1.3.0 — tính năng mới additive (download control); không phá vỡ tương thích ngược; minor-bump theo SemVer phù hợp.
+
+### Added
+
+- **Nút tải sơ đồ PNG và SVG ("PNG" / "SVG") trên mỗi sơ đồ render thành công** — Mỗi sơ đồ Mermaid render thành công giờ có thêm hai nút "PNG" và "SVG" đặt cạnh nút Toggle và Zoom (cùng hàng control hiện có). Bấm "SVG" tải ngay file vector gốc lossless (`mermaid-diagram-<n>.svg`) — đường chất lượng phổ quát, đúng mọi loại diagram (flowchart, sequence, class, state, ER, …). Bấm "PNG" tải ảnh PNG độ phân giải cao, nền trong suốt, scale 2x–4x theo DPI màn hình — hoạt động đầy đủ với diagram nhãn `<text>` SVG native (sequence, class, state, ER, …). Nút Download không xuất hiện trên block lỗi. Tên file có nghĩa và duy nhất theo thứ tự diagram: `mermaid-diagram-<n>.png` / `mermaid-diagram-<n>.svg`. Khi `resetPreviews` chạy (đổi theme), nút Download bị gỡ cùng preview container — không để lại nút mồ côi. US: `MAIN-US-007` / PR: `PR-MAIN-US-007` / ADR: `ADR-MAIN-008` / CR: `CR-MAIN-2026-06-12-01`
+
+### Known Limitation (v1.3.0) — PNG unavailable for flowchart/foreignObject diagrams
+
+**PNG là best-effort, không phổ quát.** Flowchart và các diagram dùng `<foreignObject>` HTML (nhãn HTML — ca mặc định của Mermaid 11.15.0 cho flowchart) làm canvas bị tainted khi raster hoá qua `img → canvas`, khiến `toBlob` ném `SecurityError`. Điều này **không thể sửa được bằng config** trong Mermaid 11.15.0 (đã kiểm chứng thực nghiệm trên Chrome thật; xem ADR-MAIN-008 và CR-MAIN-2026-06-12-01).
+
+**Hành vi khi bấm "PNG" trên diagram flowchart/foreignObject:** Thay vì PNG, extension **tự động tải SVG thay thế** (`mermaid-diagram-<n>.svg`) và hiển thị một **notice nhẹ, không chặn** thông báo đã tải SVG thay PNG. Không bao giờ là no-op im lặng hay file rỗng — người dùng luôn nhận được một file dùng được.
+
+**SVG là định dạng chất lượng chính:** SVG vector lossless mở đúng mọi loại diagram, không có giới hạn foreignObject, phù hợp cho tài liệu, slide, ticket — và là file đích của fallback tự động.
+
+### Verified behavior (Chrome smoke — ADR-MAIN-008 gate PASS)
+
+Smoke gate thực tế trên Chrome thật, Mermaid 11.15.0:
+- **Flowchart (foreignObject):** bấm "PNG" → auto-fallback → `mermaid-diagram-1.svg` (14840 B) tải thành công + notice "Đã tải SVG thay PNG cho sơ đồ này" hiện đúng một lần.
+- **Sequence diagram (native text):** bấm "PNG" → `mermaid-diagram-2.png` (26676 B, PNG thật, nền trong suốt, chữ sắc nét) tải thành công, không notice.
+- **SVG button (cả hai loại):** vector gốc lossless tải thành công (`mermaid-diagram-1.svg` 14840 B, `mermaid-diagram-2.svg` 22875 B).
+- **AC-1 button presence:** cả flowchart và sequence đều có container `data-mermaid-download` với hai nút "PNG" và "SVG".
+
+### Go/No-Go Checklist (v1.3.0)
+
+| Hạng mục | Trạng thái | Ghi chú |
+|---|---|---|
+| Gate 1 (Planning) | PASS | |
+| Gate 2 (Requirements) | PASS | AC-1..AC-8 đầy đủ; CR-MAIN-2026-06-12-01 (Option A) human-approved |
+| Gate 3 (Design) | PASS | ADR-MAIN-008 Accepted (human-approved conditional gate 2026-06-12) |
+| Gate 4 (Development) | PASS | PR: `PR-MAIN-US-007`; review: `REVIEW-MAIN-US-007` |
+| Gate 5 (Testing) | PASS | 156/156 tests pass; 81.11% branch (≥80% threshold); 0 critical / 0 major defects; 1 minor D-01 (non-blocking); smoke gate ADR-MAIN-008 PASS |
+| Open critical/major defects | 0 | D-01 minor: serializeSvg viewBox branch untested — non-blocking |
+| Browser smoke test | PASS | Flowchart SecurityError→SVG+notice; sequence PNG 3x transparent; SVG both types — xác nhận thực tế Chrome (SMOKE-EVIDENCE-US-007) |
+| Known limitation documented | YES | PNG unavailable for foreignObject/flowchart → auto-fallback SVG + notice; human-approved (CR-MAIN-2026-06-12-01) |
+| Version bumped | YES | package.json: 0.1.0 → 1.3.0; public/manifest.json: 0.1.0 → 1.3.0 |
+| Rollback documented | YES | Runbook §7 — inline rollback section updated for v1.3.0 |
+| rollback_tested | PENDING | Phải được main thread ghi `rollback_tested: true` trước Go (qua `/sdlc:gono`) |
+
+**AWAITING HUMAN GO/NO-GO**
+
+---
 
 ---
 
