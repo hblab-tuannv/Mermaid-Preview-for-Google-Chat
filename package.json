@@ -1,6 +1,6 @@
 {
   "name": "mermaid-preview-google-chat",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Chrome extension (MV3) that renders Mermaid code blocks inline in Google Chat.",
   "private": true,
   "type": "module",

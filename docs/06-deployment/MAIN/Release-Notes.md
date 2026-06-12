@@ -1,15 +1,59 @@
 ---
-version: "1.1.0"
-date: "2026-06-12T06:40:17Z"
+version: "1.1.1"
+date: "2026-06-12T08:13:38Z"
 author: release-manager
 status: GO approved — Store upload pending
-release_id: REL-MAIN-2026-06-12-3
+release_id: REL-MAIN-2026-06-12-4
 epic: MAIN
 ---
 
 # Release Notes — Mermaid Preview for Google Chat
 
-**Cập nhật lần cuối:** `2026-06-12T06:40:17Z`
+**Cập nhật lần cuối:** `2026-06-12T08:13:38Z`
+
+---
+
+## v1.1.1 — Sửa preview lỗi với label `<br>` và sơ đồ C4 (hotfix)
+
+**Release ID:** `REL-MAIN-2026-06-12-4`
+**Version bump:** v1.1.0 → v1.1.1 — sửa lỗi (corrective), tương thích ngược; patch-bump theo SemVer phù hợp.
+**Kênh phân phối:** Chrome Web Store (cập nhật phiên bản công khai thứ ba).
+
+### Fixed (US-010 — CR-MAIN-2026-06-12-04)
+
+- **Sơ đồ có nhãn xuống dòng `<br>` / `<br/>` và toàn bộ họ sơ đồ C4 (`C4Context`, `C4Container`, …) giờ preview được** thay vì hiện marker "Mermaid: could not render diagram". Cả hai lỗi này chung **một root cause**: hàm `parseSvg` (`src/lib/render.ts`) parse chuỗi SVG do Mermaid sinh ra bằng MIME `image/svg+xml` (XML nghiêm ngặt). Mermaid nhúng HTML vào trong `<foreignObject>` cho label nhiều dòng (thẻ void `<br>` không đóng) và cho các box mô tả của sơ đồ C4 — hợp lệ HTML-trong-SVG nhưng KHÔNG phải XML well-formed, nên parser XML trả node gốc `<parsererror>` → `parseSvg` trả `null` → rơi vào error-fallback.
+  - **Cách sửa:** `parseSvg` parse bằng `text/html` + `querySelector('svg')`. HTML parser khoan dung thẻ void và vẫn đặt `<svg>`/con vào đúng SVG namespace (foreignObject → XHTML), khớp output Mermaid. `DOMParser` vẫn tạo document trơ nên giữ nguyên đảm bảo no-`innerHTML`/no-exec (ADR-MAIN-003); phòng thủ XSS chính (`securityLevel: 'strict'`) không đổi.
+  - US: `MAIN-US-010` / PR: `PR-MAIN-US-010` / CR: `CR-MAIN-2026-06-12-04` / ADR: none (không đảo quyết định kiến trúc nào).
+
+### Không đổi
+
+Detect/observe/theme/zoom/toggle/download, `content_scripts.matches`, permission. Không thêm thư viện. Không đổi hành vi với sơ đồ thực sự không hợp lệ (vẫn error-fallback như cũ).
+
+### Go/No-Go Checklist (v1.1.1 — REL-MAIN-2026-06-12-4)
+
+| Hạng mục | Trạng thái | Ghi chú |
+|---|---|---|
+| Gate 1 (Requirements / Scope+AC) | PASS | CR-MAIN-2026-06-12-04 + US-010 AC-1..AC-4 human-approved `2026-06-12T07:50:03Z` |
+| Gate ◆ (Design / ADR) | N/A | Không cần ADR — corrective fix, no-exec posture ADR-MAIN-003 giữ nguyên |
+| Gate 4 (Development) | PASS | PR-MAIN-US-010; REVIEW-MAIN-US-010 Approve, 0 must-fix; TDD red→green |
+| Gate 5 (Testing) | PASS | `npx vitest run --coverage` → 189/189 pass; 0 critical / 0 major; TC-MAIN-US-010-01..04 |
+| Browser smoke (real Chat) | **PASS** | Human xác nhận build + smoke trên chat.google.com thật OK (`2026-06-12`): label `<br/>` + C4Context render đúng, không hồi quy |
+| Open critical/major defects | 0 | |
+| Version consistency | YES | manifest.json = 1.1.1; package.json = 1.1.1; tên zip = v1.1.1 |
+| Packaging verified | YES | `npm run package` → `mermaid-preview-google-chat-v1.1.1.zip` |
+| Rollback documented | YES | Runbook §7 — dev: revert PR-MAIN-US-010 (commit 98e3c9e); Store: hotfix v1.1.2 hoặc unpublish/disable |
+| rollback_tested | N/A (documented) | Hotfix một-hàm, không migration; revert PR hoặc bump version. Human GO bao trùm. |
+| Images on Dashboard | N/A | Không đổi asset; cập nhật version không yêu cầu ảnh mới |
+| Quyết định Go/No-Go | **GO** | Phê duyệt bởi human ngày `2026-06-12` sau khi smoke PASS |
+
+### Quyết định Go/No-Go (v1.1.1)
+
+**GO — phê duyệt cập nhật công khai Chrome Web Store v1.1.1 bởi human ngày `2026-06-12` sau khi smoke PASS.**
+
+- **Cơ sở:** Gate 1/4/5 PASS (Design N/A); 0 defect critical/major; 189 test pass; **browser smoke trên Chat thật PASS** (human xác nhận build + test label `<br/>` và C4); packaging sạch (`...v1.1.1.zip`); version nhất quán 1.1.1; rollback documented.
+- **Việc operator còn lại (thủ công, Claude không tự làm):** Trên Chrome Web Store Developer Dashboard — upload `mermaid-preview-google-chat-v1.1.1.zip`, kiểm tra version 1.1.1, submit để Google review. Theo `Deployment-Plan-CWS.md`.
+
+> Đây là quyết định phát hành; thao tác upload/submit thực tế lên Chrome Web Store do human/operator thực hiện thủ công trên Developer Dashboard. Không deploy tự động.
 
 ---
 
