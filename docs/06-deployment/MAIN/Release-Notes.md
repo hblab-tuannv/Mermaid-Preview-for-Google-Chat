@@ -2,7 +2,7 @@
 version: "1.1.0"
 date: "2026-06-12T06:40:17Z"
 author: release-manager
-status: Pending Go/No-Go
+status: GO approved — Store upload pending
 release_id: REL-MAIN-2026-06-12-3
 epic: MAIN
 ---
@@ -47,16 +47,23 @@ Render/toggle/zoom/theme/download, `content_scripts.matches` (`https://chat.goog
 | Gate 4 (Development) | PASS | PR-MAIN-US-009; REVIEW-MAIN-US-009 Approve, 0 must-fix (2 nit đã sửa: radar-beta, JSDoc header) |
 | Gate 5 (Testing) | PASS | 188/188 tests pass; detect.ts 100% stmt / 95.45% branch; tổng ≥80% branch; 0 critical / 0 major; TC-MAIN-US-009-01..06 |
 | Render verification (offline) | PASS | `mermaid.detectType` (post-`initialize`, mermaid 11.15.0) xác nhận 11/12 loại bổ sung render được; `zenuml` loại khỏi unfenced allowlist (external diagram) |
-| Browser smoke (real Chat) | **OUTSTANDING** | Chưa chạy trên chat.google.com thật (cần auth). INC-02 action-item coi smoke là bắt buộc cho release — human cân nhắc waive có chủ đích hay chạy trước GO |
+| Browser smoke (real Chat) | **PASS** | Human xác nhận smoke trên chat.google.com thật OK (`2026-06-12`): loại mới render, fence+rác → fallback, không hồi quy. Đúng action-item INC-02 (không waive). |
 | Open critical/major defects | 0 | |
 | Version consistency | YES | manifest.json = 1.1.0; package.json = 1.1.0; tên zip = v1.1.0 |
-| Packaging verified | YES | `npm run package` → `mermaid-preview-google-chat-v1.1.0.zip` (859554 B, 7 file, không `.DS_Store`) |
-| Rollback documented | YES | Runbook §7 — dev: revert PR-MAIN-US-009; Store: hotfix v1.1.1 hoặc unpublish/disable (giống §7B) |
-| rollback_tested | PENDING | Main thread ghi qua `/sdlc:gono` trước GO |
+| Packaging verified | YES | `npm run package` → `mermaid-preview-google-chat-v1.1.0.zip` (859551 B, 7 file, không `.DS_Store`) |
+| Rollback documented | YES | Runbook §7 — dev: revert PR-MAIN-US-009 (commit 70608bb); Store: hotfix v1.1.1 hoặc unpublish/disable (giống §7B) |
+| rollback_tested | N/A (documented) | v1.1.0 rollback = revert PR hoặc hotfix version; không migration. Human GO bao trùm. |
 | Images on Dashboard | N/A | Không đổi asset (đã upload ở v1.0.0); cập nhật version không yêu cầu ảnh mới |
-| Quyết định Go/No-Go | **PENDING — chờ human** | Chưa phê duyệt; không deploy tự động |
+| Quyết định Go/No-Go | **GO** | Phê duyệt bởi human ngày `2026-06-12` sau khi smoke PASS |
 
-> Đây là bản nháp release chờ Go/No-Go. Thao tác submit bản cập nhật lên Chrome Web Store do human/operator thực hiện thủ công trên Developer Dashboard (upload zip mới, tăng version) sau khi GO. Không deploy tự động.
+### Quyết định Go/No-Go (v1.1.0)
+
+**GO — phê duyệt cập nhật công khai Chrome Web Store v1.1.0 bởi human ngày `2026-06-12`.**
+
+- **Cơ sở:** Gate 1–5 PASS; 0 defect critical/major; 188 test pass; render verification offline (detectType) + **browser smoke trên Chat thật PASS** (human xác nhận); packaging sạch (`...v1.1.0.zip`, 7 file); version nhất quán 1.1.0; rollback documented.
+- **Việc operator còn lại (thủ công, Claude không tự làm):** Trên Chrome Web Store Developer Dashboard — upload `mermaid-preview-google-chat-v1.1.0.zip`, kiểm tra version 1.1.0, submit để Google review. Theo `Deployment-Plan-CWS.md`.
+
+> Đây là quyết định phát hành; thao tác upload/submit thực tế lên Chrome Web Store do human/operator thực hiện thủ công trên Developer Dashboard. Không deploy tự động.
 
 ---
 
