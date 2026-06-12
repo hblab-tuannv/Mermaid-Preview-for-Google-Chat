@@ -206,19 +206,17 @@ describe('overlay open — fit to viewport (smoke-fix)', () => {
   it('scales the diagram to fit the viewport on open when layout metrics are available', () => {
     const { preview } = setup();
     // Natural stage 1000x800 in an 800x600 viewport → fit = min(0.72, 0.675).
-    const rectSpy = vi
-      .spyOn(Element.prototype, 'getBoundingClientRect')
-      .mockReturnValue({
-        width: 1000,
-        height: 800,
-        top: 0,
-        left: 0,
-        right: 1000,
-        bottom: 800,
-        x: 0,
-        y: 0,
-        toJSON: () => ({}),
-      } as DOMRect);
+    const rectSpy = vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({
+      width: 1000,
+      height: 800,
+      top: 0,
+      left: 0,
+      right: 1000,
+      bottom: 800,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    } as DOMRect);
     const origW = window.innerWidth;
     const origH = window.innerHeight;
     Object.defineProperty(window, 'innerWidth', { value: 800, configurable: true });
@@ -327,7 +325,9 @@ describe('zoom controls — AC-4', () => {
     // Arm the drag.
     stage.dispatchEvent(new MouseEvent('mousedown', { clientX: 50, clientY: 50, bubbles: true }));
     // Move.
-    document.dispatchEvent(new MouseEvent('mousemove', { clientX: 80, clientY: 70, bubbles: true }));
+    document.dispatchEvent(
+      new MouseEvent('mousemove', { clientX: 80, clientY: 70, bubbles: true }),
+    );
     // Translate should have changed.
     const transform = stage.style.transform;
     // Transform includes translate with non-zero values.

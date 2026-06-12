@@ -32,12 +32,7 @@ const FIT_MARGIN = 0.9;
  * when any metric is non-positive (e.g. jsdom, where layout is unavailable) so
  * the caller can keep the natural scale of 1.
  */
-function computeFitScale(
-  width: number,
-  height: number,
-  vw: number,
-  vh: number,
-): number | null {
+function computeFitScale(width: number, height: number, vw: number, vh: number): number | null {
   if (width <= 0 || height <= 0 || vw <= 0 || vh <= 0) return null;
   const fit = Math.min((vw * FIT_MARGIN) / width, (vh * FIT_MARGIN) / height);
   return Math.min(SCALE_MAX, Math.max(SCALE_MIN, fit));
@@ -54,7 +49,11 @@ function applyTransform(stage: HTMLElement, scale: number, tx: number, ty: numbe
  * first (singleton guarantee). Document-level listeners are tracked so they can
  * be removed on any close path (Esc / backdrop / X / programmatic).
  */
-function openZoomOverlay(preview: HTMLElement, doc: Document, opener: HTMLButtonElement): () => void {
+function openZoomOverlay(
+  preview: HTMLElement,
+  doc: Document,
+  opener: HTMLButtonElement,
+): () => void {
   // Close any existing overlay first (singleton).
   closeActiveOverlay();
 
@@ -262,7 +261,12 @@ function openZoomOverlay(preview: HTMLElement, doc: Document, opener: HTMLButton
   // keeps the natural scale of 1.
   const view = doc.defaultView;
   const rect = stage.getBoundingClientRect();
-  const fit = computeFitScale(rect.width, rect.height, view?.innerWidth ?? 0, view?.innerHeight ?? 0);
+  const fit = computeFitScale(
+    rect.width,
+    rect.height,
+    view?.innerWidth ?? 0,
+    view?.innerHeight ?? 0,
+  );
   if (fit !== null) {
     scale = fit;
     applyTransform(stage, scale, tx, ty);

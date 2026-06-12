@@ -8,6 +8,7 @@
 import { type MermaidTheme, detectTheme } from './theme';
 import { TOGGLE_ATTR, attachToggle } from './toggle';
 import { ZOOM_ATTR, attachZoom, closeActiveOverlay } from './zoom';
+import { DOWNLOAD_ATTR, attachDownload } from './download';
 
 const RENDERED_ATTR = 'data-mermaid-preview';
 /** Marks a source element whose render has already been attempted. */
@@ -119,6 +120,10 @@ export async function renderMermaidBlock(
     // idempotent success path, so it is created exactly once per block
     // (ADR-MAIN-007). Error path intentionally does NOT call attachZoom.
     attachZoom(container, doc);
+    // Add the download buttons (PNG + SVG) immediately after attachZoom, on the
+    // same idempotent success path, so they are created exactly once per block
+    // (ADR-MAIN-008). Error path intentionally does NOT call attachDownload.
+    attachDownload(container, doc);
     return 'rendered';
   } catch {
     // Fallback: leave the original code block visible, add a light error marker.
@@ -152,7 +157,9 @@ export function resetPreviews(root: ParentNode): void {
       let control = sibling!.nextElementSibling;
       while (
         control !== null &&
-        (control.hasAttribute(TOGGLE_ATTR) || control.hasAttribute(ZOOM_ATTR))
+        (control.hasAttribute(TOGGLE_ATTR) ||
+          control.hasAttribute(ZOOM_ATTR) ||
+          control.hasAttribute(DOWNLOAD_ATTR))
       ) {
         const next = control.nextElementSibling;
         control.remove();

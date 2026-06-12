@@ -9,6 +9,7 @@ import {
 } from './render';
 import { TOGGLE_ATTR } from './toggle';
 import { ZOOM_ATTR, closeActiveOverlay } from './zoom';
+import { DOWNLOAD_ATTR } from './download';
 
 vi.mock('mermaid', () => ({
   default: {
@@ -186,6 +187,33 @@ describe('renderMermaidBlock', () => {
     expect(document.querySelectorAll(`[${ZOOM_ATTR}]`)).toHaveLength(1);
   });
 
+  // US-007 AC-1: download control wired on success path only.
+  it('attaches a download control on success path (US-007 AC-1)', async () => {
+    const b = block('graph TD\nA-->B');
+    await renderMermaidBlock(b, { renderer: okRenderer(), doc: document });
+    const downloadCtl = document.querySelector(`[${DOWNLOAD_ATTR}]`);
+    expect(downloadCtl).not.toBeNull();
+  });
+
+  it('attaches no download control on the error fallback (US-007 AC-1)', async () => {
+    const b = block('graph TD\nA--');
+    const failing: MermaidRenderer = {
+      render: vi.fn().mockRejectedValue(new Error('Parse error')),
+    };
+    await renderMermaidBlock(b, { renderer: failing });
+    expect(document.querySelector(`[${DOWNLOAD_ATTR}]`)).toBeNull();
+  });
+
+  // US-007 AC-2: idempotency — second call is 'skipped', so only one download
+  // control should exist.
+  it('creates exactly one download control even after a redundant scan (US-007 AC-2)', async () => {
+    const b = block('graph TD\nA-->B');
+    const renderer = okRenderer();
+    await renderMermaidBlock(b, { renderer, doc: document });
+    await renderMermaidBlock(b, { renderer, doc: document }); // skipped
+    expect(document.querySelectorAll(`[${DOWNLOAD_ATTR}]`)).toHaveLength(1);
+  });
+
   // US-005: theme passed to the renderer.
   it('passes the detected theme to the renderer (US-005 AC-1)', async () => {
     const surface = document.createElement('div');
@@ -237,6 +265,8 @@ describe('resetPreviews', () => {
     expect(document.querySelector(`[${TOGGLE_ATTR}]`)).toBeNull();
     // US-006 AC-6: zoom button also removed.
     expect(document.querySelector(`[${ZOOM_ATTR}]`)).toBeNull();
+    // US-007 AC-6: download control also removed.
+    expect(document.querySelector(`[${DOWNLOAD_ATTR}]`)).toBeNull();
     expect(b.element.hidden).toBe(false);
     expect(b.element.hasAttribute('data-mermaid-rendered')).toBe(false);
     expect(b.element.hasAttribute('data-mermaid-preview')).toBe(false);
