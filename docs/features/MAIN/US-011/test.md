@@ -42,7 +42,7 @@ author: "qa-engineer"
 | **Preconditions** | Build `npm run build`, load `dist/` (unpacked) vào Chrome, đăng nhập Gmail có panel Chat |
 | **Steps** | Mở `https://mail.google.com`, mở panel Chat/Spaces, mở một space chứa tin nhắn có code block ` ```mermaid `; quan sát |
 | **Expected** | Sơ đồ Mermaid được render inline trong iframe Chat của Gmail (giống trên chat.google.com); không lỗi console |
-| **Result** | Chưa chạy — chờ xác nhận thủ công của người dùng sau khi load build (giới hạn đã ghi ở story.md) |
+| **Result** | Pass — human xác nhận smoke test trên Gmail thật OK (`2026-06-12`) |
 
 ### TC-MAIN-US-011-04: Least-privilege giữ nguyên (không quyền thừa)
 | Field | Value |

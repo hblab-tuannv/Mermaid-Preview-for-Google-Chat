@@ -2,7 +2,7 @@
 version: "1.2.0"
 date: "2026-06-12T10:21:16Z"
 author: release-manager
-status: Draft — pending Go/No-Go
+status: GO approved — Store upload pending
 release_id: REL-MAIN-2026-06-12-5
 epic: MAIN
 ---
@@ -39,8 +39,10 @@ epic: MAIN
 | Gate ◆ (Design / ADR) | N/A | Không cần ADR — mở rộng phạm vi inject, không đảo kiến trúc |
 | Gate 4 (Development) | PASS | PR-MAIN-US-011; REVIEW-MAIN-US-011 Approve, 0 must-fix; TDD red→green |
 | Gate 5 (Testing) | PASS | `npx vitest run` → 190/190 pass; typecheck + lint clean; 0 critical / 0 major; TC-MAIN-US-011-01,02,04,05 |
-| Browser smoke (real Gmail Chat) | **PENDING** | TC-MAIN-US-011-03 — cần human load `dist/` + xác nhận render trong panel Chat của Gmail thật |
+| Browser smoke (real Gmail Chat) | **PASS** | TC-MAIN-US-011-03 — human xác nhận smoke test trên Gmail thật OK (`2026-06-12`) |
 | Rollback đã kiểm chứng | PASS | Rollback = re-publish v1.1.1 / unpack v1.1.1 (xem Runbook §Rollback) |
+
+**Go/No-Go quyết định:** **GO** — human approved `2026-06-12T10:21:16Z` ("Smoke test done. Go"). Upload `.zip` lên Chrome Web Store do người dùng thực hiện qua Developer Dashboard.
 
 > **Lưu ý Go/No-Go:** khuyến nghị người dùng chạy smoke test thủ công TC-MAIN-US-011-03 trên Gmail thật (load unpacked `dist/`) **trước** khi quyết định Go, vì hành vi inject iframe không kiểm được bằng test tĩnh manifest.
 
