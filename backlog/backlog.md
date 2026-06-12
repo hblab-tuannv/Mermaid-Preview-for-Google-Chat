@@ -13,3 +13,5 @@
 | 7 | MAIN-US-007 | Nút tải sơ đồ — Download PNG chất lượng cao (nền trong suốt) + SVG vector | Done | US-003, US-006 |
 | 8 | MAIN-US-008 | Chrome Web Store publish readiness — v1.0.0 + brand icons + packaging | Done | US-001..007 |
 | 9 | MAIN-US-009 | Mở rộng độ phủ loại sơ đồ Mermaid (tin fence + mở rộng keyword) | Done | US-002, US-003 |
+| 10 | MAIN-US-010 | Sửa preview lỗi với label `<br>` và sơ đồ C4 (parse SVG bằng text/html) | Done | US-003 |
+| 11 | MAIN-US-011 | Hỗ trợ thêm domain mail.google.com (Google Chat nhúng trong Gmail) | Done | US-001, US-002, US-003 |

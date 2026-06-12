@@ -14,14 +14,23 @@ describe('manifest.json', () => {
     );
   });
 
-  it('injects the content script only on chat.google.com (AC-4)', () => {
+  it('injects the content script on chat.google.com and mail.google.com (US-011 AC-1/AC-3)', () => {
     const contentScripts = manifest.content_scripts as Array<{
       matches: string[];
       js: string[];
+      all_frames?: boolean;
     }>;
     expect(contentScripts).toHaveLength(1);
-    expect(contentScripts[0].matches).toEqual(['https://chat.google.com/*']);
+    expect(contentScripts[0].matches).toEqual([
+      'https://chat.google.com/*',
+      'https://mail.google.com/*',
+    ]);
     expect(contentScripts[0].js).toEqual(['content.js']);
+  });
+
+  it('injects into nested frames so the Gmail-embedded Chat iframe is covered (US-011 AC-2)', () => {
+    const contentScripts = manifest.content_scripts as Array<{ all_frames?: boolean }>;
+    expect(contentScripts[0].all_frames).toBe(true);
   });
 
   it('declares no broad or surplus permissions (AC-5)', () => {

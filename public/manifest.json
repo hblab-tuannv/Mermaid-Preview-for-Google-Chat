@@ -15,12 +15,14 @@
   "content_scripts": [
     {
       "matches": [
-        "https://chat.google.com/*"
+        "https://chat.google.com/*",
+        "https://mail.google.com/*"
       ],
       "js": [
         "content.js"
       ],
-      "run_at": "document_idle"
+      "run_at": "document_idle",
+      "all_frames": true
     }
   ]
 }
