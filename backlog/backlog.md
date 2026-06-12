@@ -10,3 +10,4 @@
 | 4 | MAIN-US-004 | Toggle preview/source + xử lý tin nhắn tải động | Done | US-003 |
 | 5 | MAIN-US-005 | Tự động theme sáng/tối theo giao diện Google Chat | Done | US-004 |
 | 6 | MAIN-US-006 | Nút zoom phóng to sơ đồ toàn màn hình (overlay) | Done | US-003, US-004 |
+| 7 | MAIN-US-007 | Nút tải sơ đồ — Download PNG chất lượng cao (nền trong suốt) + SVG vector | Ready | US-003, US-006 |
