@@ -1,15 +1,48 @@
 ---
-version: "1.1.1"
-date: "2026-06-12T08:13:38Z"
+version: "1.2.0"
+date: "2026-06-12T10:21:16Z"
 author: release-manager
-status: GO approved — Store upload pending
-release_id: REL-MAIN-2026-06-12-4
+status: Draft — pending Go/No-Go
+release_id: REL-MAIN-2026-06-12-5
 epic: MAIN
 ---
 
 # Release Notes — Mermaid Preview for Google Chat
 
-**Cập nhật lần cuối:** `2026-06-12T08:13:38Z`
+**Cập nhật lần cuối:** `2026-06-12T10:21:16Z`
+
+---
+
+## v1.2.0 — Hỗ trợ Google Chat nhúng trong Gmail (`mail.google.com`)
+
+**Release ID:** `REL-MAIN-2026-06-12-5`
+**Version bump:** v1.1.1 → v1.2.0 — tính năng mới (mở rộng phạm vi host), tương thích ngược; minor-bump theo SemVer phù hợp.
+**Kênh phân phối:** Chrome Web Store (cập nhật phiên bản công khai thứ tư).
+
+### Added (US-011)
+
+- **Extension giờ hoạt động cả khi dùng Google Chat ngay trong Gmail** (`https://mail.google.com`), không chỉ trang `chat.google.com` riêng. Sơ đồ Mermaid trong panel Chat/Spaces của Gmail được render inline như trên chat.google.com.
+  - **Cách làm:** thêm match pattern `https://mail.google.com/*` vào `content_scripts.matches` (giữ nguyên `https://chat.google.com/*`) và bật `"all_frames": true` để content script được inject vào **iframe Chat con cùng origin** mà Gmail dùng (`mail.google.com/chat/...`) — không chỉ top frame.
+  - **Không đổi logic:** detect/render/observe/theme/zoom/toggle/download và toàn bộ `src/` giữ nguyên (thuần DOM, độc lập URL). Chỉ `public/manifest.json` thay đổi.
+  - US: `MAIN-US-011` / PR: `PR-MAIN-US-011` / ADR: none (không đảo quyết định kiến trúc; pattern-rộng + all_frames ghi nhận inline ở `design.md`).
+
+### Bảo mật / quyền
+
+- **Least-privilege giữ nguyên:** không thêm `<all_urls>`, không thêm `permissions`/`host_permissions`. `matches` vẫn giới hạn đúng hai host của Google (chat + mail).
+- `all_frames: true` cũng mở rộng inject sang các iframe con của cả hai host — vô hại do pipeline chỉ quét `<pre>` và idempotent (no-op nếu không có code block Mermaid).
+
+### Go/No-Go Checklist (v1.2.0 — REL-MAIN-2026-06-12-5)
+
+| Hạng mục | Trạng thái | Ghi chú |
+|---|---|---|
+| Gate 1 (Requirements / Scope+AC) | PASS | US-011 AC-1..AC-5 human-approved `2026-06-12T10:21:16Z` ("Approve. Autonomous until done") |
+| Gate ◆ (Design / ADR) | N/A | Không cần ADR — mở rộng phạm vi inject, không đảo kiến trúc |
+| Gate 4 (Development) | PASS | PR-MAIN-US-011; REVIEW-MAIN-US-011 Approve, 0 must-fix; TDD red→green |
+| Gate 5 (Testing) | PASS | `npx vitest run` → 190/190 pass; typecheck + lint clean; 0 critical / 0 major; TC-MAIN-US-011-01,02,04,05 |
+| Browser smoke (real Gmail Chat) | **PENDING** | TC-MAIN-US-011-03 — cần human load `dist/` + xác nhận render trong panel Chat của Gmail thật |
+| Rollback đã kiểm chứng | PASS | Rollback = re-publish v1.1.1 / unpack v1.1.1 (xem Runbook §Rollback) |
+
+> **Lưu ý Go/No-Go:** khuyến nghị người dùng chạy smoke test thủ công TC-MAIN-US-011-03 trên Gmail thật (load unpacked `dist/`) **trước** khi quyết định Go, vì hành vi inject iframe không kiểm được bằng test tĩnh manifest.
 
 ---
 
