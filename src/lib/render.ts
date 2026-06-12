@@ -73,11 +73,23 @@ function defaultRenderer(): MermaidRenderer {
   return cachedDefault;
 }
 
-/** Parse an SVG string into a node WITHOUT executing it (AC-5: no innerHTML). */
+/**
+ * Parse an SVG string into a node WITHOUT executing it (AC-5: no innerHTML).
+ *
+ * Parsed as `text/html`, NOT `image/svg+xml`: Mermaid embeds HTML inside
+ * `<foreignObject>` for line-break labels (`<br>`) and C4 diagrams, which is
+ * valid HTML-in-SVG but NOT well-formed XML — the strict XML parser turns an
+ * unclosed `<br>` into a `<parsererror>` root and the diagram falls back to the
+ * error marker. The HTML parser is lenient about void tags and still places
+ * `<svg>`/children in the SVG namespace (foreignObject content in XHTML), so the
+ * imported node renders correctly. DOMParser builds an inert document — scripts
+ * never run, and importNode'd script nodes stay inert — so the no-exec guarantee
+ * is preserved (the real XSS defense remains mermaid securityLevel:'strict').
+ */
 function parseSvg(svg: string, doc: Document): SVGElement | null {
-  const parsed = new DOMParser().parseFromString(svg, 'image/svg+xml');
-  const el = parsed.documentElement;
-  if (el.nodeName.toLowerCase() !== 'svg') {
+  const parsed = new DOMParser().parseFromString(svg, 'text/html');
+  const el = parsed.querySelector('svg');
+  if (!el) {
     return null;
   }
   return doc.importNode(el, true) as unknown as SVGElement;

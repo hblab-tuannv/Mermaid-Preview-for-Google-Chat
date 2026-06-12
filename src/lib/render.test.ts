@@ -58,6 +58,29 @@ describe('renderMermaidBlock', () => {
     expect(container.querySelector('svg')).not.toBeNull();
   });
 
+  it('renders SVG that embeds HTML-in-foreignObject with unclosed <br> (br labels, C4)', async () => {
+    // Mermaid emits HTML inside <foreignObject> for line-break labels and C4
+    // boxes, including void <br> tags that are valid HTML but NOT well-formed
+    // XML. Parsing such SVG as image/svg+xml produces a <parsererror> root, so
+    // the preview wrongly fell back to the error marker. The SVG must parse via
+    // the lenient HTML path and render.
+    const b = block('graph TD\nA["L1<br>L2"]-->B');
+    const withBr: MermaidRenderer = {
+      async render(id) {
+        return {
+          svg: `<svg id="${id}"><foreignObject><div xmlns="http://www.w3.org/1999/xhtml">L1<br>L2</div></foreignObject><g></g></svg>`,
+        };
+      },
+    };
+    const outcome = await renderMermaidBlock(b, { renderer: withBr, doc: document });
+    expect(outcome).toBe('rendered');
+    const container = b.element.nextElementSibling as HTMLElement;
+    const svg = container.querySelector('svg');
+    expect(svg).not.toBeNull();
+    expect(svg!.namespaceURI).toBe('http://www.w3.org/2000/svg');
+    expect(container.querySelector('foreignObject')).not.toBeNull();
+  });
+
   it('falls back to error when the renderer returns no SVG root (AC-2)', async () => {
     const b = block('graph TD\nA-->B');
     const notSvg: MermaidRenderer = {
